@@ -23,11 +23,6 @@ function testfun(i){
 	},(Math.random() * 5000)>>0)
 	return deferred.promise;
 }
-// console.log('----------------push')
-// alignment1.push(testfun,[9])
-// console.log('----------------go')
-// alignment1.go(testfun,[9])
-// return;
 
 var leng = 10;
 for(var i = 0; i<leng; i++){
