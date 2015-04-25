@@ -1,6 +1,7 @@
 var q = require("q");
-var alignment = require('./index').Promise;
-
+var alignmenta = require('./index').Promise();
+var alignment = require('./index').Promise(q);
+//alignmenta.setQ(q);
 var alignment1 = new alignment(10,function(data){
 	//console.log(">>>>>>>>>>>>", arguments)
 	console.log('第' + data + '个事件完成 - 正在运行的中的事件数：' + alignment1.ing + ' - 剩余运行队列：' + alignment1.lins.length)
