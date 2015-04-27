@@ -1,15 +1,15 @@
 var q = require("q");
-var alignmenta = require('./index').Promise();
+var alignmenta = require('./index').Promise(1);
 var alignment = require('./index').Promise(q);
 //alignmenta.setQ(q);
 var alignment1 = new alignment(10,function(data){
 	//console.log(">>>>>>>>>>>>", arguments)
-	console.log('第' + data + '个事件完成 - 正在运行的中的事件数：' + alignment1.ing + ' - 剩余运行队列：' + alignment1.lins.length)
+	console.log('第' + data + '个事件完成 - 正在运行的中的事件数：' + this.ing + ' - 剩余运行队列：' + this.lins.length)
 },function(err,obj){
 	console.log(err)
 	//obj.errNumber < 3 && this.jump(obj)  // 运行次数小于3 则重试
 },null,function(){
-	console.log("运行队列己空!",alignment1.ing)
+	console.log("运行队列己空!",this.ing)
 },{retryON:3})
 
 function testfun(i){
