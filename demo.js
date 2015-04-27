@@ -1,5 +1,5 @@
 var q = require("q");
-var Queue = require('./index').Promise(q);
+var Queue = require('./index').Promise(1);
 
 //new Queue([并行数],<运行成功>,<远行出错>,<队列开始>,<队列结束>,<config>) 并行数必须,其他可省略 config 为最后一个参数
 var queue1 = new Queue(5
