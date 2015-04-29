@@ -13,7 +13,7 @@ lib-queue 是一款轻量级 node异步方法 运行队列控制类。以均衡�
 -  con 配置队列 **开始 结束** 事件,运行单元的 **成功,失败** 事件及配置执行单元出错的 **重试** 机制。  
 
 实例化队列 
-```
+```javascript
 var queue = new lib-queue.Promise(true)(100,{
 		"event_succ":function(){}  //成功
 		,"event_err":function(){}  //失败
