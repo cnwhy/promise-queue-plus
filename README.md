@@ -1,26 +1,26 @@
-#lib-queue
-lib-queue 是一款轻量级 node异步方法 运行队列控制类。以均衡间歇性高并发的系统负载，提高node服务稳定性。
-暂时只实现Promise队列
+#queue-fun
+queue-fun 是一款轻量级 node异步方法 运行队列控制类。以均衡间歇性高并发的系统负载，提高node服务稳定性。
+*暂时只实现Promise队列* 
 
 ###Promise队列
-#####lib-queue.Promise( q ) 
+#####queue-fun.Promise( q ) 
 初始化 参数**q** 
 - 为空 队列方法: `push` `unshift` `go` `jump` 无返回值;
 - true 插入队列方法: `push` `unshift` `go` `jump` 返回Promise ,可执行独立回调
 - 也可传入q模块, 插入方法反回功能更强大的Promise的
-#####实例化队列 new lib-queue.Promise()(runMax,con) 
+#####实例化队列 new queue-fun.Promise()(runMax,con) 
 - runMax 并行运行队列方法的最大个数
 -  con 配置队列 **开始 结束** 事件,运行单元的 **成功,失败** 事件及配置执行单元出错的 **重试** 机制。  
 
 实例化队列 
 ```javascript
-var queue = new lib-queue.Promise(true)(100,{
+var queue = new queue-fun.Promise(true)(100,{
 		"event_succ":function(){}  //成功
 		,"event_err":function(){}  //失败
 		,"event_begin":function(){}  //队列开始
 		,"event_end":function(){}    //队列完成
-		,"event_add":function(){}    //有执行项添加进执行单元后执行,注意 go 及 jump方法不会触发
-		,"retryON":0				 //单元出错重试次数
+		,"event_add":function(){}    //有执行项添加进执行单元后执行,注意 go 及 jump方法不会触发  
+		,"retryON":0				 //单元出错重试次数  
 		,"retryType":0               //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
 	})`
 ```
@@ -51,7 +51,7 @@ con:  配置
 
 ### demo
 ``` javascript
-var libq = require('lib-queue');  //引入
+var libq = require('queue-fun');  //引入
 //初始化Promise异步队列类,参数1表示带Promise类型的反回
 var Queue = libq.Promise(1); 
 var queue1 = new Queue(2,{
