@@ -20,22 +20,24 @@ function testfun(i){
 }
 //向队列添加运行单元
 var pro1 = queue1.push(testfun,[1]); //添加运行项
-
 pro1.then(function(data){
 	console.log('then1-succ:',data)
 })
 pro1.then(function(data){
 	console.log('then2-succ:',data)
 })
-queue1.start();
-return;
 queue1.go(testfun,[2]) //添加并自动启动队列
 queue1.go(testfun,[3],{Queue_event:0}) //添加不会触发队列 回调的运行项.
-queue1.go(testfun,[4]).done(
-    function(data){console.log('done-succ:',data)},
-    function(err){console.log('done-err:',err)}
-)
+queue1.go(testfun,[4]).done(function(data){
+	console.log('done-succ:',data)
+},function(err){
+	console.log('done-err:',err)
+})
 queue1.go(testfun,[5],{
-    event_succ:function(data){console.log('conf-succ:',data)},
-    event_err:function(err){console.log('conf-err:',err)}
+	event_succ:function(data){
+		console.log('conf-succ:',data)
+	},
+    event_err:function(err){
+		console.log('conf-err:',err)
+	}
 })

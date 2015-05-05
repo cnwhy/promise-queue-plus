@@ -30,11 +30,11 @@ function fun2(i,err){
 }
 
 var succ = function(k,done,xc){
-			return function(data){
-				xc && clearTimeout(xc)
-				if(data !== k) throw "返回参数错误";
-				done();
-			}
+		return function(data){
+			xc && clearTimeout(xc)
+			if(data !== k) throw "返回参数错误";
+			done();
+		}
 	}
 	,err = function(done,xc){
 		return function(err){
@@ -59,7 +59,7 @@ var succ = function(k,done,xc){
 //普通测试
 describe('测试Queue-fun内部模拟q的异步函数类', function(){
     describe('单次调用测试', function(){
-		describe('#.then', function(){
+		describe('#then', function(){
 			
 			it('.then(succ) 同步函数执行 成功', function(done){
 				var xc = timeout_err(done,"未成功调用succ");
@@ -95,7 +95,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 			})
 
 		})
-		describe('#.done', function(){
+		describe('#done', function(){
 			
 			it('.done(succ) 同步函数执行 成功', function(done){
 				var xc = timeout_err(done,"未成功调用succ");
@@ -140,7 +140,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 			})
 
 		})
-		describe('#.fail', function(){
+		describe('#fail', function(){
 			it('.fail(err) 同步函数执行 成功', function(done){
 				var xc = timeout_succ(done);
 				fun1(1).fail(err(done,xc))
@@ -161,7 +161,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 		})
     })
 	describe('链式调用测试', function(){
-		describe('#.then()', function(){
+		describe('#then()', function(){
 			it('.then(succ).then(succ) 1 > 1', function(done){
 				var xc = timeout_err(done,'未成功走完流程');
 				fun2(1).then(function(data){
@@ -229,80 +229,3 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 		})
 	})
 });
-
-/*
-
-if(0){
-	var P1 = testfun(1,2)
-	P1.then(function(d){
-		var deferred = q.defer();
-		//setTimeout(function(){
-			console.log('1:' + d);
-			deferred.resolve(1111)
-		//},100)
-		return deferred.promise;
-	}).then(function(d){
-		console.log('1then:' + d)
-	}).done(function(d){
-		console.log('1done:' + d)
-	},function(err){
-		console.log('1doneerr:' + err)
-	})
-	//return;
-	P1.then(function(d){
-		console.log('2:' + d)
-		
-		return 2222;
-	}).then(function(d){
-		console.log('2then:' + d)
-	}).done(function(d){
-		console.log('2done:' + d)
-	},function(err){
-		console.log('2doneerr:' + err)
-	})
-}
-
-function Qtest(){
-	console.log('>>>> Qtest');
-	_test().then(function(data){
-		console.log(data)
-		if('> done - succ OK' == data){
-			console.log('> then OK')
-		}
-		_test(2).fail(function(err){
-			console.log(err)
-			if('> done - err OK' == err){console.log('> fail ok')}
-			console.log('<<<< Qtest end')
-		})
-	})
-}
-
-function _test(a){
-	var deferred = q_.defer();
-	testfun_(1,0).then(function(data){
-		console.log(data)
-		return testfun_(2,a || 0)
-	}).then(function(data){
-		console.log(data)
-		return testfun_(3,0)
-	}).done(function(data){
-		console.log(data);
-		if(!a && data == 3){
-			deferred.resolve('> done - succ OK');
-		}else{
-			deferred.resolve('> done - succ Err');
-		}
-	},function(err){
-		console.log(err + " -- err")
-		if(a && err == 2){
-			deferred.reject('> done - err OK')
-		}else{
-			deferred.reject('> done - err Err')
-		}
-	})
-	return deferred.promise;
-}
-
-Qtest();  //正常工作测试
-
-*/

@@ -2,24 +2,23 @@ var q = require("q");
 var Queue = require('../index').Promise(1);
 
 //new Queue([并行数],<运行成功>,<远行出错>,<队列开始>,<队列结束>,<config>) 并行数必须,其他可省略 config 为最后一个参数
-var queue1 = new Queue(5
-,function(data,obj){
-	console.log('第' + data + '事件完成 - 运行中事件数：' + this.ing + ' - 剩余：' + this.lins.length)
-},function(err,obj){
-	console.log(err)
-},function(){
-	console.log('--------队列开始了---------')
-},function(){
-	console.log('--------队列结束了---------')
-},{
-	retryON:0 //出错重试次数 默认0;
-	,'event_add':function(){
-		if(!this.isStart && this.lins.length == 10){ //当添加了10个事件后,自动运行队列
-			console.log(">> 触发自动运行条件")
-			this.start();
+var queue1 = new Queue(5,function(data,obj){
+		console.log('第' + data + '事件完成 - 运行中事件数：' + this.ing + ' - 剩余：' + this.lins.length)
+	},function(err,obj){
+		console.log(err)
+	},function(){
+		console.log('--------队列开始了---------')
+	},function(){
+		console.log('--------队列结束了---------')
+	},{
+		retryON:0 //出错重试次数 默认0;
+		,'event_add':function(){
+			if(!this.isStart && this.lins.length == 10){ //当添加了10个事件后,自动运行队列
+				console.log(">> 触发自动运行条件")
+				this.start();
+			}
 		}
-	}
-})
+	})
 
 //一个Promise的异步方法
 function testfun(i){
@@ -63,7 +62,7 @@ setTimeout(function(){
 },2000)
 setTimeout(function(){
 	console.log('go 方式添加事件!')
-	queue1.go(testfun,['Q55'])  //go方法添加会启动队列运行
+	queue1.go(testfun,['Q5'])  //go方法添加会启动队列运行
 },2200)
 
 
