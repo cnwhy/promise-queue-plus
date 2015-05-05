@@ -113,6 +113,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 			// 	var xc = timeout_succ(done);
 			// 	fun2(1,2).done(err(done,xc))
 			// })
+			
 			it('.done(succ,err) 同步函数执行 成功', function(done){
 				var xc = timeout_err(done,"未成功调用succ");
 				fun1(1).done(succ(1,done,xc),err(done,xc))
@@ -128,6 +129,14 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 			it('.done(succ,err) 异步函数执行 失败', function(done){
 				var xc = timeout_succ(done);
 				fun2(1,2).done(err(done,xc),succ(2,done,xc))
+			})
+			it('.done(null,err) 成功', function(done){
+				var xc = timeout_succ(done);
+				fun2(1).done(null,err(done,xc))
+			})
+			it('.done(null,err) 失败', function(done){
+				var xc = timeout_err(done,'未成功走完流程');
+				fun2(1,2).done(null,succ(2,done,xc))
 			})
 
 		})
@@ -155,24 +164,24 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 	describe('链式调用测试', function(){
 		describe('#.then()', function(){
 			it('.then(succ).then(succ) 1 > 1', function(done){
-				var xc = timeout_err(done,'未成功走完流程',2);
+				var xc = timeout_err(done,'未成功走完流程');
 				fun2(1).then(function(data){
 					if(data !== 1) throw "返回参数错误";
-					return fun2(1.1)
+					return fun1(1.1)
 				}).then(succ(1.1,done,xc))
 			})
 			it('.then(succ).then(succ) 1 > 0', function(done){
-				var xc = timeout_succ(done,2);
+				var xc = timeout_succ(done);
 				fun2(2).then(function(data){
 					if(data !== 2) throw "返回参数错误";
-					return fun2(2.1,2.2)
+					return fun1(2.1,2.2)
 				}).then(err(done,"错误调用"))
 			})
 			it('.then(succ).then(succ,err) 1 > 0', function(done){
 				var xc = timeout_err(done,'未成功走完流程',2);
 				fun2(2).then(function(data){
 					if(data !== 2) throw "返回参数错误";
-					return fun2(2.1,2.2)
+					return fun1(2.1,2.2)
 				}).then(err(done,"错误调用"),succ(2.2,done,xc))
 			})
 			it('.then(succ).then(succ).fail(err) 1 > 0 > fail(err)', function(done){
@@ -192,15 +201,31 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 					return fun1(3.3)
 				}).fail(err(done,"错误调用2")).then(succ(3.3,done,xc))
 			})
-			it('.then(succ).then(succ).done(succ,err) 1 > 0 > 1 > done(succ,err)', function(done){
+			it('.then(succ).done(succ,err) 1 > 1 > done(succ,err)', function(done){
 				var xc = timeout_err(done,'未成功走完流程',2);
-				fun2(3).then(function(data){
-					if(data !== 3) throw "返回参数错误";
-					return fun2(3.1,3.2)
-				}).then(err(done,"错误调用1"),function(err){
-					if(err !== 3.2) throw "返回参数错误";
-					return fun1(3.3)
-				}).done(succ(3.3,done,xc),err(done,"错误调用2",xc))
+				fun2(3).then(function(d){
+					if(d !== 3) throw "返回参数错误";
+					return fun1(3.1)
+				}).done(succ(3.1,done,xc),err(done,"错误调用2",xc))
+			})
+			it('.then(succ).done(succ,err) 1 > 0 > done(succ,err)', function(done){
+				var xc = timeout_err(done,'未成功走完流程',2);
+				fun2(3).then(function(d){
+					if(d !== 3) throw "返回参数错误";
+					return fun1(3.1,3.2)
+				}).done(err(done,"错误调用2",xc),succ(3.2,done,xc))
+			})
+			it('.then(succ,err).done(succ,err) 0 > 1 > done(succ,err)', function(done){
+				var xc = timeout_err(done,'未成功走完流程',2);
+				fun2(3,3.1).then(err(done,"错误调用1"),function(err){
+					if(err !== 3.1) throw "返回参数错误";
+					return fun1(3.2)
+				}).done(succ(3.2,done,xc),err(done,"错误调用2",xc))
+			})
+			it('.then(succ).done(succ,err) 0 > 1 > done(succ,err)', function(done){
+				var xc = timeout_err(done,'未成功走完流程',2);
+				fun2(3,3.1).then(err(done,"错误调用1"))
+				.done(err(done,"错误调用2",xc),succ(3.1,done,xc))
 			})
 		})
 	})
