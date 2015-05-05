@@ -2,7 +2,12 @@
   "name": "queue-fun",
   "version": "0.1.0",
   "description": "实现对 Promise、Async 方法的队列控制",
+  "homepage": "https://github.com/cnwhy/queue-fun",
   "main": "index.js",
+  "files": [
+    "index.js",
+    "lib/*"
+  ],
   "scripts": {
     "test": "./test.js"
   },
@@ -13,12 +18,18 @@
   "keywords": [
     "queue",
     "Promise",
-	"Async",
+    "Async",
     "Q",
 	"队列"
   ],
+  "dependencies":{},
+  "devDependencies":{
+    "q":"*",
+    "assert":"*"
+  },
   "author": {
-    "name":"cnwhy"
+    "name": "cnwhy",
+    "email": "w.why@163.com"
   },
   "license": "BSD"
 }
