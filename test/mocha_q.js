@@ -141,7 +141,6 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 
 		})
 		describe('#.fail', function(){
-	
 			it('.fail(err) 同步函数执行 成功', function(done){
 				var xc = timeout_succ(done);
 				fun1(1).fail(err(done,xc))

@@ -1,5 +1,5 @@
 var q = require("q");
-var alignment = require('./index').Promise();
+var alignment = require('../index').Promise();
 
 var leng =50000;
 var minN = 500

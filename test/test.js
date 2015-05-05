@@ -1,6 +1,6 @@
 var q = require("q");
-var alignmenta = require('./index').Promise(1);
-var alignment = require('./index').Promise(q);
+var alignmenta = require('../index').Promise(1);
+var alignment = require('../index').Promise(q);
 //alignmenta.setQ(q);
 var alignment1 = new alignment(10,function(data){
 	//console.log(">>>>>>>>>>>>", arguments)
