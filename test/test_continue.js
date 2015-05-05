@@ -1,3 +1,4 @@
+//持续运行测试
 var q = require("q");
 var alignment = require('../index').Promise();
 
@@ -23,7 +24,7 @@ var alignment1 = new alignment(1000,function(data){
 function testfun(i){
 	var deferred = q.defer();
 	setTimeout(function(){
-		if(i%3333 == 1){
+		if(i%8000 == 1){
 			deferred.reject(new Error("err " + i))
 		}else{
 			deferred.resolve(i)
@@ -65,11 +66,3 @@ function adde(){
 	adding = 0;
 }
 adde()
-
-
-function fb(i){
-	if(i<=2){
-		return 1
-	}
-	return fb(i-1) + fb(i-2)
-}
