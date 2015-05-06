@@ -161,7 +161,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 		})
     })
 	describe('链式调用测试', function(){
-		describe('#then()', function(){
+		//describe('#then()', function(){
 			it('.then(succ).then(succ) 1 > 1', function(done){
 				var xc = timeout_err(done,'未成功走完流程');
 				fun2(1).then(function(data){
@@ -226,6 +226,22 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				fun2(3,3.1).then(err(done,"错误调用1"))
 				.done(err(done,"错误调用2",xc),succ(3.1,done,xc))
 			})
-		})
+			it('.then(succ,err) 1 > TypeError', function(done){
+				var xc = timeout_err(done,'未成功走完流程',2);
+				var p = fun2(3)
+				p.then(function(d){
+					if(d !== 3) throw "返回参数错误";
+					return p;
+				},err(done,"错误调用",xc)).fail(succ("TypeError",done,xc))
+			})
+			it('.then(succ,err) 0 > TypeError', function(done){
+				var xc = timeout_err(done,'未成功走完流程',2);
+				var p = fun2(3,3.1)
+				p.then(err(done,"错误调用",xc),function(d){
+					if(d !== 3.1) throw "返回参数错误";
+					return p;
+				}).fail(succ("TypeError",done,xc))
+			})
+		//})
 	})
 });
