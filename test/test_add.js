@@ -5,7 +5,7 @@ var Q0 = QueueFun.Promise();
 var Q1 = QueueFun.Promise(1);
 var Q2 = QueueFun.Promise(q);
 
-var qqwry = require("lib-qqwry")
+//var qqwry = require("lib-qqwry")
 
 function testfun(i,err){
 	var deferred = q.defer();
@@ -19,13 +19,13 @@ function testfun(i,err){
 	return deferred.promise;
 }
 
-testfun(1,2).then(function(data){
-	console.log(data)
-}).done(null,function(err){
-	console.log(err)
-})
+// testfun(1,2).then(function(data){
+// 	console.log(data)
+// }).done(null,function(err){
+// 	console.log(err)
+// })
 
-return;
+//return;
 
 function testfun_(i,err){
 	var deferred = q_.defer();
@@ -80,11 +80,11 @@ if(0){
 
 function QandQ(){
 	console.log('>>>>添加效率测试')
-	q0 = new Q0(1000)
-	q1 = new Q1(1000)
-	q2 = new Q2(1000)
+	var q0 = new Q0(1000)
+	var q1 = new Q1(1000)
+	var q2 = new Q2(1000)
 	
-	var maxl = 100000
+	var maxl = 50000
 	var d0 = new Date();
 	for(var k=0;k<maxl;k++){
 		q0.push(testfun,[k],{
@@ -147,6 +147,6 @@ function _test(a){
 	})
 	return deferred.promise;
 }
-//QandQ();  //插入效率测试
-Qtest();  //正常工作测试
+QandQ();  //插入效率测试
+//Qtest();  //正常工作测试
 

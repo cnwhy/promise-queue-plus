@@ -7,7 +7,7 @@ var maxtime = 200
 
 //同步函数
 function fun1(i,err){
-	var deferred = q_.defer();
+	var deferred = q_();
 	if(err){
 		deferred.reject(err)
 	}else{
@@ -17,7 +17,7 @@ function fun1(i,err){
 }
 //异步函数
 function fun2(i,err){
-	var deferred = q_.defer();
+	var deferred = q_();
 	setTimeout(function(){
 		if(err){
 			deferred.reject(err)
