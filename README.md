@@ -7,11 +7,6 @@ queue-fun 是一款轻量级 node异步方法 运行队列控制类。
 - 间歇性高并发系统
 - 单用户占用整个资源过高
 
-## 待完善
-- 集群支持
-- 内存溢出隐患
-- 其它异步规范支持
-
 ###Promise队列
 #####queue-fun.Promise( q ) 
 初始化 参数**q** 
@@ -25,12 +20,12 @@ queue-fun 是一款轻量级 node异步方法 运行队列控制类。
 实例化队列 
 ```javascript
 var queue = new queue-fun.Promise(true)(100,{
-		"event_succ":function(){}  //成功
-		,"event_err":function(){}  //失败
+		"event_succ":function(){}    //成功
+		,"event_err":function(){}    //失败
 		,"event_begin":function(){}  //队列开始
 		,"event_end":function(){}    //队列完成
 		,"event_add":function(){}    //有执行项添加进执行单元后执行,注意 go 及 jump方法不会触发  
-		,"retryON":0				 //单元出错重试次数  
+		,"retryON":0                 //单元出错重试次数  
 		,"retryType":0               //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
 	})`
 ```
@@ -94,3 +89,7 @@ queue1.go(testfun,[5],{
 	event_err:function(err){console.log('conf-err:',err)}
 })
 ```
+## 待完善
+- 集群支持
+- 内存溢出隐患处理
+- 其它异步规范支持
