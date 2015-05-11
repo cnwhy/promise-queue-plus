@@ -1,7 +1,7 @@
 var queuefun = require('../');  //引入
 var q = require("q");
 var Promise = require("Promise");
-var q = require("thenjs");
+var thenjs = require("thenjs");
 
 //初始化Promise异步队列类,参数1表示带Promise类型的反回
 var Queue = queuefun.Promise(1);
@@ -11,7 +11,26 @@ var queue1 = new Queue(2,{
 }); //实列化最大并发为2的运行队列
 //var q = queuefun.Q;  //模块中简单实现了Q的基本功能，可以一试，
 //定义一个Promise风格的异步方法
-function testfun(i,err){
+
+//q
+queue1.push(function(){
+	var def = q.defer();
+    setTimeout(function(){
+        if(err){
+            def.reject(err)
+        }else{
+            def.resolve("a模块")
+        }
+    },(Math.random() * 2000)>>0)
+    return def.promise;
+})
+
+queue1.push(function(){
+	
+})
+
+
+function qfun(i,err){
     var deferred = q.defer();
     setTimeout(function(){
         if(err){
@@ -22,6 +41,8 @@ function testfun(i,err){
     },(Math.random() * 2000)>>0)
     return deferred.promise;
 }
+
+
 //向队列添加运行单元
 var pro1 = queue1.push(testfun,[1]); //添加运行项
 pro1.then(function(data){
