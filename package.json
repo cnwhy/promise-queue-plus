@@ -9,8 +9,8 @@
     "lib/*"
   ],
   "scripts": {
-    "test": "node test/demo.js"
-	,"test_Pro": "node test/demo.js"
+    "test": "node test/demo.js",
+    "test_Pro": "node test/demo.js"
   },
   "repository": {
     "type": "git",
@@ -21,14 +21,17 @@
     "Promise",
     "Async",
     "Q",
-	"队列"
+    "队列"
   ],
-  "dependencies":{},
+  "dependencies":{
+    "lib-qqwry":"*"
+  },
   "devDependencies":{
     "q":"*",
     "assert":"*",
-	"Promise":"*",
-	"thenjs":"*"
+    "promise":"*",
+    "thenjs":"*",
+    "express":"*"
   },
   "author": {
     "name": "cnwhy",

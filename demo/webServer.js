@@ -1,13 +1,11 @@
 "use strict";
 var express = require('express');
 var Queuefun = require('../index');
-var Queue = Queuefun.Promise(1);
+var Queue = Queuefun.Promise();
 var queue = new Queue(1000)
 var q = Queuefun.Q;
 var app = express();
 var sp = 500;
-
-
 
 function cb(sp,cb){
 	setTimeout(cb,sp)

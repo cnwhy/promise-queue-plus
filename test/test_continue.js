@@ -1,6 +1,6 @@
 //持续运行测试
-var q = require("q");
-var alignment = require('../index').Promise();
+var q = require("../lib/q");
+var alignment = require('../index').Queue();
 
 var leng =50000;
 var minN = 500

@@ -1,3 +1,3 @@
-﻿var Promise = require('./lib/Promise.js')
-exports.Promise = Promise;
+﻿var Queue = require('./lib/Queue.js')
+exports.Queue = Queue;
 exports.Q = require('./lib/Q.js')

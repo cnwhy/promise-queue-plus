@@ -56,11 +56,11 @@ var succ = function(k,done,xc){
 				done();
 			},(maxtime+100)*c)
 	}
+
 //普通测试
 describe('测试Queue-fun内部模拟q的异步函数类', function(){
     describe('单次调用测试', function(){
 		describe('#then', function(){
-			
 			it('.then(succ) 同步函数执行 成功', function(done){
 				var xc = timeout_err(done,"未成功调用succ");
 				fun1(1).then(succ(1,done,xc))
@@ -93,7 +93,6 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				var xc = timeout_err(done,'未成功调用err');
 				fun2(1,2).then(err(done,xc),succ(2,done,xc))
 			})
-
 		})
 		describe('#done', function(){
 			
@@ -101,18 +100,11 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				var xc = timeout_err(done,"未成功调用succ");
 				fun1(1).done(succ(1,done,xc))
 			})
-			// it('.done(succ) 同步函数执行 失败', function(done){
-			// 	var xc = timeout_succ(done);
-			// 	fun1(1,2).done(err(done,xc))
-			// })
+
 			it('.done(succ) 异步函数执行 成功', function(done){
 				var xc = timeout_err(done,"未成功调用succ");
 				fun2(1).done(succ(1,done,xc))
 			})
-			// it('.done(succ) 异步函数执行 失败', function(done){
-			// 	var xc = timeout_succ(done);
-			// 	fun2(1,2).done(err(done,xc))
-			// })
 			
 			it('.done(succ,err) 同步函数执行 成功', function(done){
 				var xc = timeout_err(done,"未成功调用succ");
@@ -243,5 +235,56 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				}).fail(succ("TypeError",done,xc))
 			})
 		//})
+	})
+	describe('集成调用测试', function(){
+		it('＃all(promise,promise,promise)', function(done){
+			var xc = timeout_err(done,'未成功走完流程',2);
+			q_.all([fun2(1),fun2(2),fun2(3)]).then(function(data){
+				clearTimeout(xc);
+				if(data.join(',') != "1,2,3") throw "返回参数错误"
+				done() ;
+			},err(done,"错误调用",xc))
+		});
+		it('＃all(1,fun,promise)', function(done){
+			var xc = timeout_err(done,'未成功走完流程',2);
+			q_.all([1,function(){return 2;},fun2(3)]).then(function(data){
+				clearTimeout(xc);
+				if(data.join(',') != "1,2,3") throw "返回参数错误"
+				done() ;
+			},err(done,"错误调用",xc))
+		})
+		it('# .spread number 成功', function(done){
+			var xc = timeout_err(done,"未成功调用succ");
+			fun2(1).spread(function(a){
+				clearTimeout(xc);
+				if(a===1){
+					done();
+				}else{
+					throw "返回参数错误"
+				}
+			})
+		})
+		it('# .spread Arr 成功', function(done){
+			var xc = timeout_err(done,"未成功调用succ");
+			fun2([1,2,3]).spread(function(a,b,c){
+				clearTimeout(xc);
+				if(a==1&&b==2&&c==3){
+					done();
+				}else{
+					throw "返回参数错误"
+				}
+			})
+		})
+		it('＃all(promise,promise,promise).spread', function(done){
+			var xc = timeout_err(done,'未成功走完流程',2);
+			q_.all([fun2(1),fun2(2),fun2(3)]).spread(function(a,b,c){
+				clearTimeout(xc);
+				if(a==1&&b==2&&c==3){
+					done();
+				}else{
+					throw "返回参数错误"
+				}
+			},err(done,"错误调用",xc))
+		});
 	})
 });

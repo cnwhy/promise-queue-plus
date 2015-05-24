@@ -12,12 +12,12 @@ queue-fun 是一款轻量级 node异步方法 运行队列控制类。
 初始化 参数**q** 
 - 为空 队列方法: `push` `unshift` `go` `jump` 无返回值;
 - true 插入队列方法: `push` `unshift` `go` `jump` 返回Promise ,可执行独立回调
-- 也可传入q模块, 插入方法反回功能更强大的Promise的
+- 也可传入q模块, 插入方法反回功能更强大的Promise的  
+
 #####实例化队列 new queue-fun.Promise()(runMax,con) 
 - runMax 并行运行队列方法的最大个数
 -  con 配置队列 **开始 结束** 事件,运行单元的 **成功,失败** 事件及配置执行单元出错的 **重试** 机制。  
 
-实例化队列 
 ```javascript
 var queue = new queue-fun.Promise(true)(100,{
 		"event_succ":function(){}    //成功
