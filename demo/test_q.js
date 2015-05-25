@@ -37,7 +37,7 @@ fun2([1,2,3]).spread(function(a,b,c){
 	console.log(b)
 	console.log(c)
 })
-return;
+//return;
 
 q_.all([fun1(1),fun2(2),3,fun1(4),function(){
 	return fun2(5);
@@ -46,3 +46,14 @@ q_.all([fun1(1),fun2(2),3,fun1(4),function(){
 },function(err){
 	console.error(err);
 })
+
+FS = require("fs")
+//Ｑ待实现
+q_.nfcall(FS.readFile, "1.txt", "utf-8").then(console.log);
+q_.nfapply(FS.readFile, ["2.txt", "utf-8"]).then(console.log);
+var readFile = q_.denodeify(FS.readFile);
+readFile("3.txt", "utf-8").then(console.log);
+
+// var redisClientGet = q.nbind(redisClient.get, redisClient);
+// return redisClientGet("user:1:id");
+

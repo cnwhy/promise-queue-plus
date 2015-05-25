@@ -1,3 +1,3 @@
 ﻿var Queue = require('./lib/Queue.js')
 exports.Queue = Queue;
-exports.Q = require('./lib/Q.js')
+exports.Q = require('./lib/q.js')
