@@ -6,7 +6,8 @@
   "main": "index.js",
   "files": [
     "index.js",
-    "lib/*"
+    "lib/*",
+    "demo/*"
   ],
   "scripts": {
     "test": "node test/demo.js",
@@ -23,14 +24,10 @@
     "Q",
     "队列"
   ],
-  "dependencies":{
-    "lib-qqwry":"*"
-  },
+  "dependencies":{},
   "devDependencies":{
     "q":"*",
     "assert":"*",
-    "promise":"*",
-    "thenjs":"*",
     "express":"*"
   },
   "author": {
