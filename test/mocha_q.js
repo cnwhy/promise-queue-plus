@@ -1,5 +1,4 @@
 var assert = require("assert");
-
 var QueueFun = require('../index');
 var q_ = QueueFun.Q;
 //var q_ = require('q')
@@ -285,6 +284,19 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 					throw "返回参数错误"
 				}
 			},err(done,"错误调用",xc))
+		});
+	})
+	describe('扩展测试 - CPS 语法糖',function(){
+		var FS = require("fs")
+		it('＃nfcall (promise风格化CPS)', function(done){
+			q_.nfcall(FS.readFile, "1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
+		});
+		it('＃nfapply (promise风格化CPS)', function(done){
+			q_.nfapply(FS.readFile, ["1.txt", "utf-8"]).then(succ('1.txt',done),err(done,"错误调用"));
+		});
+		it('＃denodeify 封装CPS函数', function(done){
+			var readFile = q_.denodeify(FS.readFile);
+			readFile("1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
 		});
 	})
 });

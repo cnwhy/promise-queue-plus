@@ -46,7 +46,7 @@ function test_add(){
 		var d1 = new Date();
 		console.log(d1 - d0," >> 原生Promise ES6")
 		for(var i=0;i<maxl;i++){
-			q1.push(testfun_,[i]).then(console.log,console.error)
+			q1.push(testfun,[i]).then(console.log,console.error)
 		}
 		var d2 = new Date();
 		console.log(d2 - d1," >> q模块")
