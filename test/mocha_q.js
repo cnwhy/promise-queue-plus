@@ -1,8 +1,8 @@
 var assert = require("assert");
 
 var QueueFun = require('../index');
-//var q_ = QueueFun.Q;
-var q_ = require('q')
+var q_ = QueueFun.Q;
+//var q_ = require('q')
 var maxtime = 200
 
 //同步函数
@@ -183,13 +183,13 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				}).then(err(done,"错误调用")).fail(succ(3.2,done,xc))
 			})
 			it('.then(succ).then(succ,err).fail(err).then(succ) 1 > 0 > 1 > then()', function(done){
-				var xc = timeout_err(done,'未成功走完流程',2);
+				var xc = timeout_err(done,'未成功走完流程',3);
 				fun2(3).then(function(data){
 					if(data !== 3) throw "返回参数错误";
 					return fun2(3.1,3.2)
 				}).then(err(done,"错误调用1"),function(err){
 					if(err !== 3.2) throw "返回参数错误";
-					return fun1(3.3)
+					return fun2(3.3)
 				}).fail(err(done,"错误调用2")).then(succ(3.3,done,xc))
 			})
 			it('.then(succ).done(succ,err) 1 > 1 > done(succ,err)', function(done){
