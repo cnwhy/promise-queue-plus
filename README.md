@@ -7,12 +7,12 @@ queue-fun 是基于Promise的 运行队列控制类。
 - 控制单用户占用资源过高
 
 ###队列
-#####queue-fun.Queue(q) 
+#####queue-fun.Queue(*q*) 
 初始化队列控制 参数**q**可传 
 - **无参数** 队列使用内置的实现的Promise;  
 - **[q](https://github.com/kriskowal/q)/ES6原生Promise** 插入队列方法: `push` `unshift` `go` `jump`返回对应的promise 
 
-#####实例化队列 new queue-fun.Queue()(runMax,con) 
+#####实例化队列 new queue-fun.Queue()(runMax, *con*) 
 - runMax 并行运行队列方法的最大个数
 - con 配置队列 **开始 结束** 事件,运行单元的 **成功,失败** 事件及配置执行单元出错的 **重试** 机制。  
 ```javascript
@@ -21,14 +21,14 @@ var queue = new queue-fun.Queue()(100,{
 		,"event_err":function(){}    //失败
 		,"event_begin":function(){}  //队列开始
 		,"event_end":function(){}    //队列完成
-		,"event_add":function(){}    //有执行项添加进执行单元后执行,注意 go 及 jump方法不会触发  
+		,"event_add":function(){}    //有执行项添加进执行单元后执行,注意go及jump不会触发  
 		,"retryON":0                 //队列单元出错重试次数  
 		,"retryType":0               //重试模式true/false(优先/搁置)执行
 	})`
 ```
 
 ####API
-##### queue.push( promisefun , args[] , con)
+##### queue.push(promisefun, *args[]*, *con*)
 向队列中尾部添加运行单元
 fun: promise function
 args: 传入的参数
@@ -40,16 +40,16 @@ con 默认值
 	,'Queue_event':true //默认会执行队列定义的回调
 }
 ```
-#####queue.unshift( fun , args[] , con) 同push 向队列中头部添加运行单元
-#####queue.go( fun , args[] , con)  同push,添加后启动队列.
-#####queue.jump( fun , args[] , con) 同unshift,添加后启动队列.
-#####setMax(newMax)
-修改并行运行队列方法的最大个数
-#####queue.start() 
+#####queue.unshift(promisefun, *args[]*, *con*) 同push 向队列中头部添加运行单元
+#####queue.go(promisefun, *args[]*, *con*)  同push,添加后会启动队列.
+#####queue.jump(promisefun, *args[]*, *con*) 同unshift,添加后启动队列.
+#####setMax(newMax)  
+修改并行数
+#####queue.start()  
 启动队列
-#####queue.stop()
+#####queue.stop()  
 暂停队列 
-#####queue.clear() 
+#####queue.clear()  
 清空队列
 
 ### demo

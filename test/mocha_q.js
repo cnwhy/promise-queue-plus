@@ -1,13 +1,13 @@
 var assert = require("assert");
 
 var QueueFun = require('../index');
-var q_ = QueueFun.Q;
-//var q_ = require('q')
+//var q_ = QueueFun.Q;
+var q_ = require('q')
 var maxtime = 200
 
 //同步函数
 function fun1(i,err){
-	var deferred = q_();
+	var deferred = q_.defer();
 	if(err){
 		deferred.reject(err)
 	}else{
@@ -17,7 +17,7 @@ function fun1(i,err){
 }
 //异步函数
 function fun2(i,err){
-	var deferred = q_();
+	var deferred = q_.defer();
 	setTimeout(function(){
 		if(err){
 			deferred.reject(err)
@@ -218,7 +218,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				fun2(3,3.1).then(err(done,"错误调用1"))
 				.done(err(done,"错误调用2",xc),succ(3.1,done,xc))
 			})
-			it('.then(succ,err) 1 > TypeError', function(done){
+			it('.then(succ,err) 1 > TypeError 测试', function(done){
 				var xc = timeout_err(done,'未成功走完流程',2);
 				var p = fun2(3)
 				p.then(function(d){
@@ -226,7 +226,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 					return p;
 				},err(done,"错误调用",xc)).fail(succ("TypeError",done,xc))
 			})
-			it('.then(succ,err) 0 > TypeError', function(done){
+			it('.then(succ,err) 0 > TypeError 测试', function(done){
 				var xc = timeout_err(done,'未成功走完流程',2);
 				var p = fun2(3,3.1)
 				p.then(err(done,"错误调用",xc),function(d){
