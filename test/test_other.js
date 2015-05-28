@@ -4,7 +4,7 @@ var promise = require("promise");
 //var thenjs = require("thenjs");
 
 //初始化Promise异步队列类,参数1表示带Promise类型的反回
-var Queue = queuefun.Queue(1);
+var Queue = queuefun.Queue();
 var queue1 = new Queue(1,{
     "event_succ":function(data){console.log('queue-succ:',data)}  //成功
     ,"event_err":function(err){console.log('queue-err:',data)}  //失败
