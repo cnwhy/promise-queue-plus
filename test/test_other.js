@@ -5,7 +5,7 @@ var promise = require("promise");
 
 //初始化Promise异步队列类,参数1表示带Promise类型的反回
 var Queue = queuefun.Queue();
-var queue1 = new Queue(1,{
+var queue1 = new Queue(2,{
     "event_succ":function(data){console.log('queue-succ:',data)}  //成功
     ,"event_err":function(err){console.log('queue-err:',data)}  //失败
     ,"event_begin":function(){console.log(">>>>> 测试异步元素开始")}
@@ -31,14 +31,14 @@ queue1.push(function(){
     });
 })
 //promise 模块
-queue1.push(function(){
-    var def = promise();
-    console.log(def)
-    setTimeout(function(){
-        def.resolve("node自带模块")
-    },(Math.random() * 2000)>>0)
-    return def.promise;
-})
+// queue1.push(function(){
+//     var def = promise();
+//     console.log(def)
+//     setTimeout(function(){
+//         def.resolve("node自带模块")
+//     },(Math.random() * 2000)>>0)
+//     return def.promise;
+// })
 // queue1.push(function(){
 //  var def = new promise.Defer();
 //     setTimeout(function(){

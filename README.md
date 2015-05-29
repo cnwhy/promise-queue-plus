@@ -8,7 +8,7 @@ queue-fun 是基于Promise的 运行队列控制类。
 
 ###队列
 #####queue-fun.Queue(*q*) 
-初始化队列控制 参数**q**可传 
+初始化队类 参数**q**可传 
 - **无参数** 队列使用内置的实现的Promise;  
 - **[q](https://github.com/kriskowal/q)/ES6原生Promise** 插入队列方法: `push` `unshift` `go` `jump`返回对应的promise 
 
