@@ -1,7 +1,7 @@
 {
   "name": "queue-fun",
   "version": "0.1.0",
-  "description": "实现对 Promise、Async 方法的队列控制",
+  "description": "基于Promise的 运行队列控制类",
   "homepage": "https://github.com/cnwhy/queue-fun",
   "main": "index.js",
   "files": [
