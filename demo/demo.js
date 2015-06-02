@@ -58,6 +58,18 @@ function testfun(i){
 
 //用push添加项 不会启动队列；
 queue1.push(testfun,['Q1'])
+queue1.addArray([1,2,3,4,5],function(v,i,arr){
+	var deferred = q.defer();
+	setTimeout(function(){
+		console.log(v)
+		deferred.resolve(i+":"+v);
+	},500);
+	return deferred.promise;
+},0,1).then(function(data){
+	console.log(data);
+})
+
+return;
 setTimeout(function(){
 	//用go添加项 将会启动队列；
 	queue1.go(testfun,['Q2'])

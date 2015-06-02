@@ -236,7 +236,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 		//})
 	})
 	describe('集成调用测试', function(){
-		it('＃all(promise,promise,promise)', function(done){
+		it('#all(promise,promise,promise)', function(done){
 			var xc = timeout_err(done,'未成功走完流程',2);
 			q_.all([fun2(1),fun2(2),fun2(3)]).then(function(data){
 				clearTimeout(xc);
@@ -244,7 +244,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				done() ;
 			},err(done,"错误调用",xc))
 		});
-		it('＃all(1,fun,promise)', function(done){
+		it('#all(1,fun,promise)', function(done){
 			var xc = timeout_err(done,'未成功走完流程',2);
 			q_.all([1,function(){return 2;},fun2(3)]).then(function(data){
 				clearTimeout(xc);
@@ -252,7 +252,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				done() ;
 			},err(done,"错误调用",xc))
 		})
-		it('# .spread number 成功', function(done){
+		it('#.spread number 成功', function(done){
 			var xc = timeout_err(done,"未成功调用succ");
 			fun2(1).spread(function(a){
 				clearTimeout(xc);
@@ -263,7 +263,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				}
 			})
 		})
-		it('# .spread Arr 成功', function(done){
+		it('#.spread Arr 成功', function(done){
 			var xc = timeout_err(done,"未成功调用succ");
 			fun2([1,2,3]).spread(function(a,b,c){
 				clearTimeout(xc);
@@ -274,7 +274,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				}
 			})
 		})
-		it('＃all(promise,promise,promise).spread', function(done){
+		it('#all(promise,promise,promise).spread', function(done){
 			var xc = timeout_err(done,'未成功走完流程',2);
 			q_.all([fun2(1),fun2(2),fun2(3)]).spread(function(a,b,c){
 				clearTimeout(xc);
@@ -288,13 +288,13 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 	})
 	describe('扩展测试 - CPS 语法糖',function(){
 		var FS = require("fs")
-		it('＃nfcall (promise风格化CPS)', function(done){
+		it('#nfcall (promise风格化CPS)', function(done){
 			q_.nfcall(FS.readFile, "1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
 		});
-		it('＃nfapply (promise风格化CPS)', function(done){
+		it('#nfapply (promise风格化CPS)', function(done){
 			q_.nfapply(FS.readFile, ["1.txt", "utf-8"]).then(succ('1.txt',done),err(done,"错误调用"));
 		});
-		it('＃denodeify 封装CPS函数', function(done){
+		it('#denodeify 封装CPS函数', function(done){
 			var readFile = q_.denodeify(FS.readFile);
 			readFile("1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
 		});
