@@ -2,7 +2,7 @@ var assert = require("assert");
 var QueueFun = require('../index');
 var q_ = QueueFun.Q;
 //var q_ = require('q')
-var maxtime = 200
+var maxtime = 50
 
 //同步函数
 function fun1(i,err){
