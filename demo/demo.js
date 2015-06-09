@@ -22,7 +22,10 @@ function event_add(){
 		this.start();
 	}
 }
-
+var q1 = new Queue(1)
+q1.push(function(){return "123"}).then(console.log,console.log);
+q1.start();
+return;
 //new Queue([并行数],<运行成功>,<远行出错>,<队列开始>,<队列结束>,<config>) 并行数必须,其他可省略 config 为最后一个参数
 var queue1 = new Queue(1,
 	event_succ,

@@ -31,15 +31,14 @@ function fun2(i,err){
 var succ = function(k,done,xc){
 		return function(data){
 			xc && clearTimeout(xc)
-			if(data !== k) throw "返回参数错误";
+			if(data !== k) return done("返回参数错误");
 			done();
 		}
 	}
 	,err = function(done,xc){
 		return function(err){
 			xc && clearTimeout(xc)
-			throw "回调错误";
-			done();
+			done("回调错误");
 		}
 	}
 	,timeout_succ = function(done,c){
@@ -51,8 +50,7 @@ var succ = function(k,done,xc){
 	,timeout_err = function(done,errmsg,c){
 		c = c ? c : 1;
 		return setTimeout(function(){
-				throw errmsg;
-				done();
+				done(errmsg);
 			},(maxtime+100)*c)
 	}
 
@@ -289,11 +287,6 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 		it('#denodeify 封装CPS函数', function(done){
 			var readFile = q_.denodeify(FS.readFile);
 			readFile("1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
-		});
-		it('#q(obj)', function(done){
-			q_(new Error(123)).then(succ(1,done),function(err){
-				console.log(err);
-			})
 		});
 	})
 });
