@@ -111,17 +111,9 @@ queue1.go(testfun,[5],{
 ```
 
 ## 关于内置Promise实现类queuefun.Q
-实现了Promises/A+规范及`done`,`spread`,`fail`;  
+实现了Promises/A+规范及`done`,`spread`,`fail`,`fin`;  
 API模仿[Q](https://github.com/kriskowal/q);  
-模拟实现了 `q.defer`,`q.Promise`,`q.all`,`q.any`,`q.nfcall`,`q.nfapply`,`q.denodeify` 等函数.
-##### .toPromis(obj).then()
-如果你习惯了.then风格写代码,你可以尝试用toPromis将普通函数/语句包装一下，让他可以获得then方法,及捕获错误。
-```javascript
-var add = function(a,b){return a+b;}
-q.toPromis(function(){return add(a+b)})
-	.then(console.log,console.error)
-```
-
+模拟实现了 `q.defer`,`q.Promise`,`q.all`,`q.any`,`q.nfcall`,`q.nfapply`,`q.denodeify`,`q.delay` 等函数.
 ## 待完善
 - 集群支持
 - 内存溢出隐患处理

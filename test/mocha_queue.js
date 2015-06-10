@@ -341,14 +341,19 @@ describe('测试Queue-fun Queue 队列类', function(){
 		})
 		describe('#队列事件测试', function(){
 			var q1 = new Queue(1,{
-				"event_succ":function(){}  //成功
+				"event_succ":function(){console.log(this,arguments)}  //成功
 				,"event_err":function(){}  //失败
 				,"event_begin":function(){}  //队列开始
 				,"event_end":function(){}    //队列完成
 				,"event_add":function(){}    //有执行项添加进执行单元后执行
 			})
 			it('#event_succ ', function(done){
-				done()
+				q1.option("event_succ",function(v,Qobj){
+					console.log(v)
+					if(v !== "event_succ") return done("反回错误！")
+					done()
+				})
+				q1.go(fun2,["event_succ"]);
 			})
 			it('#event_err ', function(done){
 				done()
