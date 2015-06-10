@@ -367,7 +367,8 @@ describe('测试Queue-fun Queue 队列类', function(){
 				,"event_begin":function(){}  //队列开始
 				,"event_end":function(){}    //队列完成
 				,"event_add":function(){}    //有执行项添加进执行单元后执行
-				,"retryNo":0				 //单元出错重试次数
+				,"retryNo":2
+				,"timeOut":0				 //单元出错重试次数
 				,"retryType":0               //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
 			})
 			it('#重试 ', function(done){
