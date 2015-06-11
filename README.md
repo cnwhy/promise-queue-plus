@@ -24,6 +24,7 @@ var queue = new queue-fun.Queue()(100,{
 		,"event_add":function(){}    //有执行项添加进执行单元后执行,注意go及jump不会触发  
 		,"retryON":0                 //队列单元出错重试次数  
 		,"retryType":0               //重试模式true/false(优先/搁置)执行
+		,"timeout":0                 //<=0无超时 超时后以'timeout'为理由拒绝
 	})`
 ```
 
@@ -37,7 +38,8 @@ var queue = new queue-fun.Queue()(100,{
 {
 	'event_succ':null
 	,'event_err':null
-	,'Queue_event':true //默认会执行队列定义的回调
+	,'Queue_event':true  //默认会执行队列定义的回调
+	,'timeout':undefined //为此单元单独设置超时时间，优先队列设置
 }
 ```
 #####queue.unshift(promisefun, *args[]*, *con*) 同push 向队列中头部添加运行单元
