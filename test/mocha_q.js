@@ -277,16 +277,16 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 		});
 	})
 	describe('扩展测试 - CPS 语法糖',function(){
-		var FS = require("fs")
+		var FS = require("fs");
 		it('#nfcall (promise风格化CPS)', function(done){
-			q_.nfcall(FS.readFile, "1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
+			q_.nfcall(FS.readFile, __dirname + "/1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
 		});
 		it('#nfapply (promise风格化CPS)', function(done){
-			q_.nfapply(FS.readFile, ["1.txt", "utf-8"]).then(succ('1.txt',done),err(done,"错误调用"));
+			q_.nfapply(FS.readFile, [__dirname + "/1.txt", "utf-8"]).then(succ('1.txt',done),err(done,"错误调用"));
 		});
 		it('#denodeify 封装CPS函数', function(done){
 			var readFile = q_.denodeify(FS.readFile);
-			readFile("1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
+			readFile(__dirname + "/1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
 		});
 	})
 });

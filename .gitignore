@@ -11,4 +11,6 @@ logs
 results
 /.idea/
 /node_modules/
+/build/
+*.min.js
 npm-debug.log
