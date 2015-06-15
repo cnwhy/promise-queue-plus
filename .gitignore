@@ -6,11 +6,13 @@ lib-cov
 *.pid
 *.gz
 
+*.min.js
+npm-debug.log
+
+/.idea/
+/node_modules/
+/_temp/
+
 pids
 logs
 results
-/.idea/
-/node_modules/
-/build/
-*.min.js
-npm-debug.log
