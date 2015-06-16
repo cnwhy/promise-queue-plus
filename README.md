@@ -49,32 +49,32 @@ var queue = new queue-fun.Queue()(100,{
 以下方法可以向队列添加一组运行单元，返回的promise对像，promise对像状态规则：
 - 所有单元执行完前，且没有执行单元状态为rejected，其状态一直为pending
 - 所有单元的promise状态都为fulfilled时，状态才为fulfilled，值为各执行单元值组成的数组或对像。
-- 运行单元的promise有rejected时，其状态立即为rejected，理由同最先变为rejected的值行单元的理由。
+- 运行单元的promise有rejected时，其状态立即为rejected，理由同最先变为rejected的值行单元的理由。  
 #####queue.all(arr,*start*,*jump*)
 添加一批执行单元。
 - `arr` 元素同queue.push方法 `[[promisefun,args,con], [promisefun,args,con]]`
 - `start` 添加完后是否立即运行队列 默认 false
-- `jump` 是否优先执行 默认 false
+- `jump` 是否优先执行 默认 false  
 #####queue.allLike/allArray (arrArgs[],promisefun,*con*,*start*,*jump*)
 向队列添加同一批同逻辑的运行单元.
 - `arrArgs[]` array 参数数组,多个参数请嵌套数组 `[1,2,[3,3.1],4]`
 - `promisefun` 返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
 - `con` 参看*queue.push* 可以省略
 - `start` 添加完后是否立即运行队列 默认 false
-- `jump` 是否优先执行 默认 false
-#####queue.allEach(arr/map,promisefun,*con*,*start*,*jump*)
-第一个参数可以是数组，也可以是一个map对像。
-类似allLike，只是向promisefun传参类似forEach传参 (element, index, arrArgs)
-#####setMax(newMax)  
-修改并行数
-#####queue.start()  
-启动队列
-#####queue.stop()  
-暂停队列 
-#####queue.clear(err)  
-清空队列
-队列中剩余的项都将以err为理由拒绝。
+- `jump` 是否优先执行 默认 false  
 
+#####queue.allEach(arr/map,promisefun,*con*,*start*,*jump*)  
+第一个参数可以是数组，也可以是一个map对像。  
+类似allLike，只是向promisefun传参类似forEach传参 (element, index, arrArgs)  
+#####setMax(newMax)  
+修改并行数  
+#####queue.start()  
+启动队列  
+#####queue.stop()  
+暂停队列  
+#####queue.clear(err)  
+清空队列  
+队列中剩余的项都将以err为理由拒绝。  
 ### demo
 ``` javascript
 var queuefun = require('queue-fun');  //引入
