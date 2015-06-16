@@ -282,6 +282,26 @@ describe('测试Queue-fun Queue 队列类', function(){
 				}
 				q2.allEach(arr,fun_temp,1).then(err(done),succ(2,done))
 			})
+			it('.allMap(map,fun,con,start,jump) all > ok', function(done){
+				var k = [],k1=[];
+				var map = {a:1,b:2,c:3}
+				function fun_temp(v,i,map){
+					return fun2(v);
+				}
+				q2.allMap(map,fun_temp,1).then(function(data){
+					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
+					done();
+				},err(done))
+			})
+			it('.allMap(map,fun,con,start,jump) all > b > err', function(done){
+				var k = [],k1=[];
+				var map = {a:1,b:2,c:3}
+				function fun_temp(v,i,map){
+					var _err = v == 2 ? i : null;
+					return fun2(v,_err);
+				}
+				q2.allMap(map,fun_temp,1).then(err(done),succ('b',done))
+			})
 		})
     })
 	describe('队列方法测试', function(){

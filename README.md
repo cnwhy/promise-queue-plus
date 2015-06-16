@@ -57,7 +57,7 @@ var queue = new queue-fun.Queue()(100,{
 - `start` 添加完后是否立即运行队列 默认 false
 - `jump` 是否优先执行 默认 false  
 
-#####queue.allLike/allArray (arrArgs[],promisefun,*con*,*start*,*jump*)
+#####queue.allLike/allArray (arrArgs[],promisefun,*con*,*start*,*jump*)  
 向队列添加同一批同逻辑的运行单元.
 - `arrArgs[]` array 参数数组,多个参数请嵌套数组 `[1,2,[3,3.1],4]`
 - `promisefun` 返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
@@ -68,6 +68,11 @@ var queue = new queue-fun.Queue()(100,{
 #####queue.allEach(arr/map,promisefun,*con*,*start*,*jump*)  
 第一个参数可以是数组，也可以是一个map对像。  
 类似allLike，只是向promisefun传参类似forEach传参 (element, index, arrArgs)  
+
+#####queue.allMap(map,promisefun,*con*,*start*,*jump*)  
+第一个参数可以是数组，也可以是一个map对像。  
+类似allLike，只是向promisefun传参类似forEach传参 (element, index, arrArgs)  
+注意：返回的promise，的值将也是一个map对像
 
 #####setMax(newMax)  
 修改并行数  
@@ -84,46 +89,51 @@ var queue = new queue-fun.Queue()(100,{
 
 ### demo
 ``` javascript
-var queuefun = require('queue-fun');  //引入
-//初始化Promise异步队列类
-var Queue = queuefun.Queue(); 
-//实列化最大并发为2的运行队列
-var queue1 = new Queue(2,{
-	"event_succ":function(data){console.log('queue-succ:',data)}  //成功
-	,"event_err":function(err){console.log('queue-succ:',data)}  //失败
-}); 
-var q = queuefun.Q;  //模块中简单实现了Q的基本功能，可以一试，
+var queuefun = require('queue-fun');
+ar Queue = queuefun.Queue(); //初始化Promise异步队列类
+var q = queuefun.Q;  //配合使用的Promise流程控制类，也可以使用q.js代替
+
+//实列化一个最大并发为1的队列
+var queue1 = new Queue(1); 
+
 //定义一个Promise风格的异步方法
 function testfun(i){
 	var deferred = q.defer();
 	setTimeout(function(){
-		if(i\ && i % 3 == 0){
-			deferred.reject(new Error("err " + i))
-		}else{
-			deferred.resolve(i)
-		}
-	},(Math.random() * 2000)>>0)
+		deferred.resolve(i)
+	},300)
 	return deferred.promise;
 }
+var log = function(a){ console.log(a); }
 //向队列添加运行单元
-queue1.push(testfun,[1]) //添加运行项
-queue1.go(testfun,[2]) //添加并自动启动队列
-queue1.go(testfun,[3],{Queue_event:0}) //添加不会触发队列 回调的运行项.
-queue1.go(testfun,[4]).then(
-	function(data){console.log('done-succ:',data)},
-	function(err){console.log('done-err:',err)}
-)
-queue1.go(testfun,[5],{
-	event_succ:function(data){console.log('conf-succ:',data)},
-	event_err:function(err){console.log('conf-err:',err)}
-})
+queue1.push(testfun,[1]).then(console.log); 
+//插入普通方法会按Promises/A+规则反回promise
+queue1.push(function(){return 2;}).then(console.log);
+//插入优先执行项 (后进先出)
+queue1.unshift(testfun,[0]).then(console.log);
+//批量插入多个远行项 array
+queue1.allArray([3,4],testfun,{'event_succ':log}).then(console.log) 
+//批量插入多个远行项 map 
+queue1.allMap({'a':5,'b':6,'c':7},testfun,{'event_succ':log}).then(console.log)
+//执行队列
+queue1.start();
+
+/*
+0
+1
+2
+3
+4
+[ 3, 4 ]
+5
+6
+7
+{ a: 5, b: 6, c: 7 }
+*/
 ```
 
 ## 关于内置Promise实现类queuefun.Q
 实现了Promises/A+规范及`done`,`spread`,`fail`,`fin`;  
 API模仿[Q](https://github.com/kriskowal/q);  
 模拟实现了 `q.defer`,`q.Promise`,`q.all`,`q.any`,`q.nfcall`,`q.nfapply`,`q.denodeify`,`q.delay` 等函数.
-## 待完善
-- 集群支持
-- 内存溢出隐患处理
-- 其它Promise实现类的支持
+
