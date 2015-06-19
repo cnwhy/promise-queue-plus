@@ -1,4 +1,23 @@
 #queue-fun
+[![NPM version][npm-image]][npm-url]
+[![build status][travis-image]][travis-url]
+[![Test coverage][coveralls-image]][coveralls-url]
+[![Gittip][gittip-image]][gittip-url]
+[![David deps][david-image]][david-url]
+[![npm download][download-image]][download-url]
+
+[npm-image]: https://img.shields.io/npm/v/queue-fun.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/queue-fun
+[travis-image]: https://img.shields.io/travis/node-modules/queue-fun.svg?style=flat-square
+[travis-url]: https://travis-ci.org/node-modules/queue-fun
+[coveralls-image]: https://img.shields.io/coveralls/node-modules/queue-fun.svg?style=flat-square
+[coveralls-url]: https://coveralls.io/r/node-modules/queue-fun?branch=master
+[gittip-image]: https://img.shields.io/gittip/fengmk2.svg?style=flat-square
+[gittip-url]: https://www.gittip.com/fengmk2/
+[david-image]: https://img.shields.io/david/node-modules/queue-fun.svg?style=flat-square
+[david-url]: https://david-dm.org/node-modules/queue-fun
+[download-image]: https://img.shields.io/npm/dm/queue-fun.svg?style=flat-square
+[download-url]: https://npmjs.org/package/queue-fun
 queue-fun 是基于Promise的 运行队列控制类。
 
 ## 使用场景
