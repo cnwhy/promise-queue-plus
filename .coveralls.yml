@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+  - "0.8"
+  - "0.10"
+  - "0.12"
+  - "1.0"
+  - "1.8"
+  - "2.0"
+  - "2.2"
+sudo: false
+script:
+  # Run test script, depending on istanbul install
+  - "test -n $(npm -ps ls istanbul) || npm test"
+after_script:
+  - "test -e ./coverage/lcov.info && npm install coveralls@2 && cat ./coverage/lcov.info | coveralls"
