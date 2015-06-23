@@ -1,14 +1,14 @@
 #queue-fun
 [![NPM version][npm-image]][npm-url]
-[![npm download][download-image]][download-url]
+[![npm download][download-image]][npm-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 
-[npm-image]: https://img.shields.io/npm/v/queue-fun.svg?style=flat-square
+[npm-image]: https://img.shields.io/npm/v/queue-fun.svg
+[download-image]: https://img.shields.io/npm/dm/queue-fun.svg
 [npm-url]: https://npmjs.org/package/queue-fun
 [coveralls-image]: https://coveralls.io/repos/cnwhy/queue-fun/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/r/cnwhy/queue-fun?branch=master
-[download-image]: https://img.shields.io/npm/dm/queue-fun.svg?style=flat-square
-[download-url]: https://npmjs.org/package/queue-fun
+
 queue-fun 是基于Promise的 运行队列控制类。
 
 ## 使用场景
