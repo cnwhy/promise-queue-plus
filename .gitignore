@@ -12,6 +12,7 @@ npm-debug.log
 /.idea/
 /node_modules/
 /_temp/
+/coverage/
 
 pids
 logs

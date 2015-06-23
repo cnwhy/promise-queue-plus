@@ -11,7 +11,10 @@
     "demo/*"
   ],
   "scripts": {
-    "test": "grunt test"
+    "test": "mocha --bail --reporter spec test/mocha_*.js",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/mocha_*.js",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec test/mocha_*.js",
+    "test-grunt": "grunt test"
   },
   "repository": {
     "type": "git",
@@ -32,6 +35,7 @@
     "grunt-browserify": "^3.8.0",
     "grunt-contrib-jshint": "^0.11.2",
     "grunt-contrib-uglify": "^0.9.1",
+    "grunt-mocha-istanbul": "^2.4.0",
     "istanbul": "0.3.15",
     "q": "*"
   },
