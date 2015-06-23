@@ -29,13 +29,14 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "assert": "*",
-    "express": "*",
+    "express": "^4.12.3",
     "grunt": "^0.4.5",
     "grunt-browserify": "^3.8.0",
+    "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-jshint": "^0.11.2",
     "grunt-contrib-uglify": "^0.9.1",
     "grunt-mocha-istanbul": "^2.4.0",
+    "grunt-mocha-test": "^0.12.7",
     "istanbul": "0.3.15",
     "q": "*"
   },
