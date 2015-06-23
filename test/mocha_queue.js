@@ -260,7 +260,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 			it('.allLike([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
 				var k = [],k1=[];
 				var arr = [0,1,[2,2],3,4]
-				q2.allLike(arr,fun2,1).then(err(done),succ(2,done))
+				q2.allLike(arr,fun2,{},1).then(err(done),succ(2,done))
 			})
 			it('.allEach([arg1,arg2],fun,con,start,jump) all ok', function(done){
 				var k = [],k1=[];
@@ -268,7 +268,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				function fun_temp(v,i,arr){
 					return fun2(v);
 				}
-				q2.allEach(arr,fun_temp,1).then(function(data){
+				q2.allEach(arr,fun_temp,{},1).then(function(data){
 					if(data.join('') !== '01234') return done("返回错误");
 					done();
 				},err(done))
@@ -300,7 +300,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 					var _err = v == 2 ? i : null;
 					return fun2(v,_err);
 				}
-				q2.allMap(map,fun_temp,1).then(err(done),succ('b',done))
+				q2.allMap(map,fun_temp,{},1).then(err(done),succ('b',done))
 			})
 		})
     })
@@ -411,14 +411,16 @@ describe('测试Queue-fun Queue 队列类', function(){
 			})
 			it('#event_err 异常', function(done){
 				var q1 = new Queue(1)
+				var errs = ['errmsg','errmsg1'],e = 0;
 				q1.option("event_err",function(err,Qobj){
-					if(err !== "errmsg") return done("反回错误！")
-					done()
+					if(err !== errs[e++]) return done("反回错误！")
+					if(e == errs.length) done()
 				})
 				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
 				q1.go(fun2,[1,'errmsg']);
+				q1.go(function(){
+					throw 'errmsg1';
+				});
 			})
 			it('#event_begin 正常', function(done){
 				var q1 = new Queue(1)
