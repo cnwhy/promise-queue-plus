@@ -2,13 +2,15 @@
 [![NPM version][npm-image]][npm-url]
 [![npm download][download-image]][npm-url]
 [![Test coverage][coveralls-image]][coveralls-url]
+[![Build Status][BuildStatus-image]][BuildStatus-url]
 
 [npm-image]: https://img.shields.io/npm/v/queue-fun.svg
 [download-image]: https://img.shields.io/npm/dm/queue-fun.svg
 [npm-url]: https://npmjs.org/package/queue-fun
 [coveralls-image]: https://coveralls.io/repos/cnwhy/queue-fun/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/r/cnwhy/queue-fun?branch=master
-
+[BuildStatus-url]: https://travis-ci.org/cnwhy/queue-fun
+[BuildStatus-image]: https://travis-ci.org/cnwhy/queue-fun.svg
 queue-fun 是基于Promise的 运行队列控制类。
 
 ## 使用场景
@@ -100,7 +102,7 @@ var queue = new queue-fun.Queue()(100,{
 ### demo
 ``` javascript
 var queuefun = require('queue-fun');
-ar Queue = queuefun.Queue(); //初始化Promise异步队列类
+var Queue = queuefun.Queue(); //初始化Promise异步队列类
 var q = queuefun.Q;  //配合使用的Promise流程控制类，也可以使用q.js代替
 
 //实列化一个最大并发为1的队列
