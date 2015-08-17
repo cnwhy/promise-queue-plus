@@ -16,6 +16,7 @@ function fun1(i,err){
 	}
 	return deferred.promise;
 }
+
 //异步函数
 function fun2(i,err){
 	var deferred = q_.defer();
@@ -37,10 +38,10 @@ var succ = function(k,done,xc){
 			done();
 		}
 	}
-	,err = function(done,xc){
+	,err = function(done,xc,err){
 		return function(err){
 			xc && clearTimeout(xc)
-			done("回调错误");
+			done(err || "调用错误");
 		}
 	}
 	,timeout_succ = function(done,c){
@@ -70,66 +71,66 @@ describe('测试Queue-fun Queue 队列类', function(){
 				q1.start();
 			})
 			it('.push(fun,args)', function(done){
-				q1.push(fun2,[1]).then(succ(1,done),err(done,"调用错误"));
+				q1.push(fun2,[1]).then(succ(1,done),err(done));
 				q1.start();
 			})
 			it('.push(fun)', function(done){
 				q1.push(function(){
 					return fun2(1)
-				}).then(succ(1,done),err(done,"调用错误"));
+				}).then(succ(1,done),err(done));
 				q1.start();
 			})
 			it('.push 添加 promise function', function(done){
-				q1.push(fun2,[1,2]).then(err(done,"调用错误"),function(err){
+				q1.push(fun2,[1,2]).then(err(done),function(err){
 					if(err !== 2) done("返回参数错误");
 				})
-				q1.push(fun2,[1]).then(succ(1,done),err(done,"调用错误"));
+				q1.push(fun2,[1]).then(succ(1,done),err(done));
 				q1.start();
 			})
 			it('.push 添加 not promise function', function(done){
-				q1.push(function(){ throw 2; }).then(err(done,"调用错误"),function(err){
+				q1.push(function(){ throw 2; }).then(err(done),function(err){
 					if(err !== 2) done("返回参数错误");
 				})
-				q1.push(function(){return 1;}).then(succ(1,done),err(done,"调用错误"));
+				q1.push(function(){return 1;}).then(succ(1,done),err(done));
 				q1.start();
 			})
 			it('.unshift 添加 promise function', function(done){
-				q1.unshift(fun2,[1]).then(succ(1,done),err(done,"调用错误"));
-				q1.unshift(fun2,[1,2]).then(err(done,"调用错误"),function(err){
+				q1.unshift(fun2,[1]).then(succ(1,done),err(done));
+				q1.unshift(fun2,[1,2]).then(err(done),function(err){
 					if(err !== 2) done("返回参数错误");
 				})
 				q1.start();
 			})
 			it('.unshift 添加 not promise function', function(done){
-				q1.unshift(function(){return 1;}).then(succ(1,done),err(done,"调用错误"));
-				q1.unshift(function(){throw 2;}).then(err(done,"调用错误"),function(err){
+				q1.unshift(function(){return 1;}).then(succ(1,done),err(done));
+				q1.unshift(function(){throw 2;}).then(err(done),function(err){
 					if(err !== 2) done("返回参数错误");
 				})
 				q1.start();
 			})
 			it('.go 添加 promise function', function(done){
-				q1.go(fun2,[1,2]).then(err(done,"调用错误"),function(err){
+				q1.go(fun2,[1,2]).then(err(done),function(err){
 					if(err !== 2) done("返回参数错误");
 				})
-				q1.go(fun2,[1]).then(succ(1,done),err(done,"调用错误"));
+				q1.go(fun2,[1]).then(succ(1,done),err(done));
 			})
 			it('.go 添加 not promise function', function(done){
-				q1.go(function(){throw 2;}).then(err(done,"调用错误"),function(err){
+				q1.go(function(){throw 2;}).then(err(done),function(err){
 					if(err !== 2) done("返回参数错误");
 				})
-				q1.go(function(){return 1;}).then(succ(1,done),err(done,"调用错误"));
+				q1.go(function(){return 1;}).then(succ(1,done),err(done));
 			})
 			it('.jump 添加 promise function', function(done){
-				q1.jump(function(){throw 2;}).then(err(done,"调用错误"),function(err){
+				q1.jump(function(){throw 2;}).then(err(done),function(err){
 					if(err !== 2) done("返回参数错误");
 				})
-				q1.jump(fun2,[1]).then(succ(1,done),err(done,"调用错误"));
+				q1.jump(fun2,[1]).then(succ(1,done),err(done));
 			})
 			it('.jump 添加 not promise function', function(done){
-				q1.jump(function(){throw 2;}).then(err(done,"调用错误"),function(err){
+				q1.jump(function(){throw 2;}).then(err(done),function(err){
 					if(err !== 2) done("返回参数错误");
 				})
-				q1.jump(function(){return 1;}).then(succ(1,done),err(done,"调用错误"));
+				q1.jump(function(){return 1;}).then(succ(1,done),err(done));
 			})
 		})
 
@@ -221,6 +222,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				}
 			})
 		})
+
 		describe('#批量添加测试', function(){
 			var q1 = new Queue(1)
 			var q2 = new Queue(3)
