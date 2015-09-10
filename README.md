@@ -20,7 +20,7 @@ queue-fun 是基于Promise的 运行队列控制类。
 
 **一点建议** 
 >并不需要把整个业务的后续处理全都放到队列中去，而只是将高消耗的那一部分放入队列，利用Promise的异部处理机制来处理后续的操作。  
->在编写代码的时候你几乎可以忘记队列的存在，但是他就在那里默默的工作着，这样代码可读性和灵活性不会有丝毫影响。
+>如果已经在用Promise来控制异步流程,我相信这是一个非高好用的队列,因为你在在编写代码的时候几乎可以忘记队列的存在，但是他就在那里默默的工作着，代码可读性和灵活性也没有丝毫影响。
 
 ###队列
 #####queue-fun.Queue(*q*) 
@@ -28,20 +28,15 @@ queue-fun 是基于Promise的 运行队列控制类。
 - **无参数** 队列使用内置的实现的Promise;  
 - **[q](https://github.com/kriskowal/q)/ES6原生Promise** 插入队列方法: `push` `unshift` `go` `jump`返回对应的promise 
 
+```javascript
+var Queue = new queue-fun.Queue()(100)`
+```
+
 #####实例化队列 new queue-fun.Queue()(runMax, *con*) 
 - runMax 并行运行队列方法的最大个数
-- con 配置队列 **开始 结束** 事件,运行单元的 **成功,失败** 事件及配置执行单元出错的 **重试** 机制。  
+- con 配置队列 **开始 结束** 事件,运行单元的 **成功,失败** 事件及配置执行单元出错的 **重试** 机制。[详细配置方法](https://github.com/cnwhy/queue-fun/wiki/%E5%AE%9E%E4%BE%8B%E5%8C%96%E9%98%9F%E5%88%97%E9%85%8D%E7%BD%AE%22%E8%B6%85%E6%97%B6%22,%22%E9%87%8D%E8%AF%95%22%E7%AD%89%E5%8F%82%E6%95%B0)  
 ```javascript
-var queue = new queue-fun.Queue()(100,{
-		"event_succ":function(){}    //成功
-		,"event_err":function(){}    //失败
-		,"event_begin":function(){}  //队列开始
-		,"event_end":function(){}    //队列完成
-		,"event_add":function(){}    //有执行项添加进执行单元后执行,注意go及jump不会触发  
-		,"retryON":0                 //队列单元出错重试次数  
-		,"retryType":0               //重试模式true/false(优先/搁置)执行
-		,"timeout":0                 //<=0无超时 超时后以'timeout'为理由拒绝
-	})`
+var queue = new Queue(100)`
 ```
 
 ####API
@@ -49,20 +44,13 @@ var queue = new queue-fun.Queue()(100,{
 向队列中尾部添加运行单元，返回promise  
 - promisefun: promise function
 - args: 传入的参数
-- con 默认值
-```javascript
-{
-	'event_succ':null
-	,'event_err':null
-	,'Queue_event':true  //默认会执行队列定义的回调
-	,'timeout':undefined //为此单元单独设置超时时间，优先队列设置
-}
-```
+- con [默认值](https://github.com/cnwhy/queue-fun/wiki/%E9%98%9F%E5%88%97%E5%85%83%E7%B4%A0-%E9%85%8D%E7%BD%AE%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)  
 #####queue.unshift(promisefun, *args[]*, *con*) 同push 向队列中头部添加运行单元
 #####queue.go(promisefun, *args[]*, *con*)  同push,添加后会启动队列.
-#####queue.jump(promisefun, *args[]*, *con*) 同unshift,添加后启动队列.
+#####queue.jump(promisefun, *args[]*, *con*) 同unshift,添加后启动队列.  
+
 #### 批量添加
-以下方法可以向队列添加一组运行单元，返回的promise对像，promise对像状态规则：
+以下方法可以向队列添加一组运行单元，返回的promise对像，状态规则如下：
 - 所有单元执行完前，且没有执行单元状态为rejected，其状态一直为pending
 - 所有单元的promise状态都为fulfilled时，状态才为fulfilled，值为各执行单元值组成的数组或对像。
 - 运行单元的promise有rejected时，其状态立即为rejected，理由同最先变为rejected的值行单元的理由。  
@@ -72,7 +60,6 @@ var queue = new queue-fun.Queue()(100,{
 - `arr` 元素同queue.push方法 `[[promisefun,args,con], [promisefun,args,con]]`
 - `start` 添加完后是否立即运行队列 默认 false
 - `jump` 是否优先执行 默认 false  
-
 #####queue.allLike/allArray (arrArgs[],promisefun,*con*,*start*,*jump*)  
 向队列添加同一批同逻辑的运行单元.
 - `arrArgs[]` array 参数数组,多个参数请嵌套数组 `[1,2,[3,3.1],4]`
@@ -89,8 +76,9 @@ var queue = new queue-fun.Queue()(100,{
 第一个参数可以是数组，也可以是一个map对像。  
 类似allLike，只是向promisefun传参类似forEach传参 (element, index, arrArgs)  
 注意：返回的promise，的值将也是一个map对像
-
-#####setMax(newMax)  
+  
+#### 队列控制
+#####queue.setMax(newMax)  
 修改并行数  
 
 #####queue.start()  
@@ -100,8 +88,7 @@ var queue = new queue-fun.Queue()(100,{
 暂停队列  
 
 #####queue.clear(err)  
-清空队列  
-队列中剩余的项都将以err为理由拒绝。  
+清空队列,队列中剩余的项都将以err为理由拒绝。  
 
 ### demo
 ``` javascript
