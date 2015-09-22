@@ -6,7 +6,7 @@ lib-cov
 *.pid
 *.gz
 
-*.min.js
+# *.min.js
 npm-debug.log
 
 /.idea/
