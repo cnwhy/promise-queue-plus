@@ -52,6 +52,7 @@ var queue = new Queue(100)
 - promisefun: promise function
 - args: 传入的参数
 - con [默认值](https://github.com/cnwhy/queue-fun/wiki/%E9%98%9F%E5%88%97%E5%85%83%E7%B4%A0-%E9%85%8D%E7%BD%AE%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)  
+
 ##### queue.unshift(promisefun, *args[]*, *con*) 同push 向队列中头部添加运行单元
 ##### queue.go(promisefun, *args[]*, *con*)  同push,添加后会启动队列.
 ##### queue.jump(promisefun, *args[]*, *con*) 同unshift,添加后启动队列.  
@@ -67,10 +68,13 @@ var queue = new Queue(100)
 - `arr` 元素同queue.push方法 `[[promisefun,args,con], [promisefun,args,con]]`
 - `start` 添加完后是否立即运行队列 默认 false
 - `jump` 是否优先执行 默认 false  
+
 ##### queue.allLike/allArray (arrArgs[],promisefun,*con*,*start*,*jump*)  
 向队列添加同一批同逻辑的运行单元.
 - `arrArgs[]` array 参数数组,多个参数请嵌套数组 `[1,2,[3,3.1],4]`
-- `promisefun` 返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
+- `promisefun`  
+
+返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
 - `con` 参看*queue.push* 可以省略
 - `start` 添加完后是否立即运行队列 默认 false
 - `jump` 是否优先执行 默认 false  
