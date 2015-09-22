@@ -53,8 +53,8 @@ var queue = new Queue(100)
 - args: 传入的参数
 - con [默认值](https://github.com/cnwhy/queue-fun/wiki/%E9%98%9F%E5%88%97%E5%85%83%E7%B4%A0-%E9%85%8D%E7%BD%AE%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)  
 
-##### queue.unshift(promisefun, *args[]*, *con*) 同push 向队列中头部添加运行单元
-##### queue.go(promisefun, *args[]*, *con*)  同push,添加后会启动队列.
+##### queue.unshift(promisefun, *args[]*, *con*) 同push 向队列中头部添加运行单元  
+##### queue.go(promisefun, *args[]*, *con*)  同push,添加后会启动队列.  
 ##### queue.jump(promisefun, *args[]*, *con*) 同unshift,添加后启动队列.  
 
 #### 批量添加
