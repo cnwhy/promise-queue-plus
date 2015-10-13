@@ -10,6 +10,7 @@ lib-cov
 npm-debug.log
 
 /.idea/
+/.vscode/
 /node_modules/
 /_temp/
 /coverage/
