@@ -1,6 +1,6 @@
 var queuefun = require('../');  //引入
 var q = require("q");
-var promise = require("promise");
+//var promise = require("promise");
 //var thenjs = require("thenjs");
 
 //初始化Promise异步队列类,参数1表示带Promise类型的反回

@@ -3,10 +3,7 @@ var q = require("q");
 var bluebird = require("bluebird")
 var QueueFun = require('../index');
 var q_ = QueueFun.Q;
-var Q0 = QueueFun.Queue(Promise);
-var Q1 = QueueFun.Queue(q);
-var Q2 = QueueFun.Queue();
-var Q3 = QueueFun.Queue(bluebird);
+
 
 function getTestFun(Pro){
 	return function(i,err){
@@ -65,7 +62,13 @@ function testfun3(i,err){
 	},(Math.random() * 200)>>0)
 	return deferred.promise;
 }
-var maxl = 50000,bxs = 500;
+var maxl = 50000,bxs = 1000;
+
+var Q0 = QueueFun.Queue(Promise);
+var Q1 = QueueFun.Queue(q);
+var Q2 = QueueFun.Queue();
+var Q3 = QueueFun.Queue(bluebird);
+
 var q0 = new Q0(bxs)
 var q1 = new Q1(bxs)
 var q2 = new Q2(bxs)
@@ -159,7 +162,9 @@ var rl = readline.createInterface({
 
 rl.question("开始测试? ", function(answer) {
 	rl.close();
-	test0().then(test1).then(test2).then(test3)
+	//test0().then(test1).then(test2).then(test3)
+	test2().then(test3).then(test0);
+	//test1().then(test3).then(test2);
 });
 //test1();
 //test2();

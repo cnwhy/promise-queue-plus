@@ -246,6 +246,16 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 			fun2(3,3.1).then(err(done,"错误调用1"))
 			.done(err(done,"错误调用2",xc),succ(3.1,done,xc))
 		})
+		it('.then(succ).done() 0 > 1 > done(err)', function(done){
+			var xc = timeout_err(done,'未成功走完流程',2);
+			 try{
+				fun2(3,3.1).then(err(done,"错误调用1")).done(err(done,"错误调用2"),succ(3.1,done,xc));
+			}catch(e){
+				console.log('1111111111222')
+				clearTimeout(xc);
+				done();
+			}
+		})
 		it('.then(succ,err) 1 > TypeError 测试', function(done){
 			var xc = timeout_err(done,'未成功走完流程',2);
 			var p = fun2(3)
