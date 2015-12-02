@@ -24,22 +24,22 @@ queue-fun 是基于Promise的 运行队列控制类。
 
 [github-q]: https://github.com/kriskowal/q
 ### 队列  
-##### queue-fun.Queue(*q*) 
+##### queuefun.Queue(*q*) 
 初始化队类 参数**q**可传: 
 - **无参数** 队列使用内置实现的Promise;  
 - 传入 **[q][github-q] / 原生Promise** (插入队列方法: `push` `unshift` `go` `jump`返回对应的promise实例) , 其实现了`defer`,`then`类似promise的类都可以.  
 
 ```javascript
 //使用内置实现的Promise
-var Queue = new queue-fun.Queue() //promise实现和模仿了q的API,但比q要快 除了then, "done, spread, fail, fin"都是支持的 
+var Queue = new queuefun.Queue() //promise实现和模仿了q的API,但比q要快 除了then, "done, spread, fail, fin"都是支持的 
 
 //Queue1使用q做为队列使用的promise实现
-var Queue1 = new queue-fun.Queue(require("q"));
+var Queue1 = new queuefun.Queue(require("q"));
 //Queue2使用原生Promise做为队列使用的promise实现
-var Queue2 = new queue-fun.Queue(Promise);
+var Queue2 = new queuefun.Queue(Promise);
 ```
 
-##### 实例化队列 new queue-fun.Queue()(runMax, *con*) 
+##### 实例化队列 new queuefun.Queue()(runMax, *con*) 
 - runMax 并行运行队列方法的最大个数
 - con 配置队列 **开始 结束** 事件,运行单元的 **成功,失败** 事件及配置执行单元出错的 **重试** 机制。[详细配置方法](https://github.com/cnwhy/queue-fun/wiki/%E5%AE%9E%E4%BE%8B%E5%8C%96%E9%98%9F%E5%88%97%E9%85%8D%E7%BD%AE%22%E8%B6%85%E6%97%B6%22,%22%E9%87%8D%E8%AF%95%22%E7%AD%89%E5%8F%82%E6%95%B0)  
 ```javascript
