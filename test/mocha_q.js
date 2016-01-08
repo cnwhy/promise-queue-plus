@@ -374,6 +374,9 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 			it('#nfcall (promise风格化CPS)', function(done){
 				q.nfcall(FS.readFile, __dirname + "/1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
 			});
+			// it('#nfcall (promise风格化CPS) call', function(done){
+			// 	q.nfcall.call(console,console.log, __dirname + "/1.txt", "utf-8").then(succ('1.txt',done),err(done,"错误调用"));
+			// });
 			it('#nfapply (promise风格化CPS)', function(done){
 				q.nfapply(FS.readFile, [__dirname + "/1.txt", "utf-8"]).then(succ('1.txt',done),err(done,"错误调用"));
 			});
