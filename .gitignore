@@ -11,6 +11,7 @@ npm-debug.log
 
 /.idea/
 /.vscode/
+/typings/
 /node_modules/
 /_temp/
 /coverage/
