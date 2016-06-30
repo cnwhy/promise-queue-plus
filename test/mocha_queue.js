@@ -31,6 +31,69 @@ function fun2(i,err){
 	return deferred.promise;
 }
 
+function ADD(queue,type,start){
+	type = type || "";
+	start = start || 0;
+	var ts = type.split("|");
+	var err = start <= 0,
+		succ = start >= 0;
+	var nostart;
+	var i = 1;
+	if(type == "nostart"){
+		nostart = 1;
+		type = "";
+	}
+	if(!type || ts.indexOf('push')){
+		succ && queue.push(fun2,[i++]);
+		err && queue.push(fun2,[i++,"push err"]);
+	}
+	if(!type || ts.indexOf('unshift')){
+		succ && queue.unshift(fun2,[i++]);
+		err && queue.unshift(fun2,[i++,"unshift err"]);
+	}
+	if(!nostart){
+		if(!type || ts.indexOf('go')){
+			succ && queue.go(fun2,[i++]);
+			err && queue.go(fun2,[i++,"go err"]);
+		}
+		if(!type || ts.indexOf('jump')){
+			succ && queue.jump(fun2,[i++]);
+			err && queue.jump(fun2,[i++,"jump err"]);
+		}
+	}
+	if(!type || ts.indexOf('all')){
+		var arr = [];
+		succ && arr.push([fun2,[i++]]);
+		err && arr.push([fun2,[i++,"all err"]]);
+		queue.all(arr);
+	}
+	if(!type || ts.indexOf('allLike')){
+		var arr = [];
+		succ && arr.push(i++);
+		err && arr.push([i++,"allLike err"]);
+		queue.allLike(arr,fun2)
+	}
+	if(!type || ts.indexOf('allEach')){
+		var arr = [];
+		succ && arr.push(i++);
+		err && arr.push([i++,"allEach err"]);
+		var fun_temp = function(v,i,arr){
+			return fun2.apply(null,[].concat(v));
+		}
+		queue.allEach(arr,fun_temp)
+	}
+	if(!type || ts.indexOf('allMap')){
+		var map = {};
+		succ && (map.a = i++);
+		err && (map.b = [i++,"allMap err"]);
+		var fun_temp = function(v,k,map){
+			return fun2.apply(null,[].concat(v));
+		}
+		queue.allMap(map,fun_temp)
+	}
+	return queue;
+}
+
 var succ = function(k,done,xc){
 		return function(data){
 			xc && clearTimeout(xc)
@@ -378,89 +441,35 @@ describe('测试Queue-fun Queue 队列类', function(){
 			// 	,"event_end":function(){}    //队列完成
 			// 	,"event_add":function(){}    //有执行项添加进执行单元后执行
 			// })
-			it('#event_succ 正常', function(done){
-				var q1 = new Queue(1)
-				q1.option("event_succ",function(v,Qobj){
-					if(v !== "event_succ") return done("反回错误！")
-					done()
-				})
-				q1.go(fun2,[1,'errmsg']);
-				q1.go(fun2,[1,'errmsg']);
-				q1.go(fun2,[1,'errmsg']);
-				q1.go(fun2,["event_succ"]);
-			})
-			it('#event_succ 异常', function(done){
-				var q1 = new Queue(1)
-				q1.option("event_succ",function(v,Qobj){
-					if(v !== "event_succ") return done("反回错误！")
-					done()
-				})
-				q1.go(fun2,[1,'errmsg']);
-				q1.go(fun2,[1,'errmsg']);
-				q1.go(fun2,[1,'errmsg']);
-				q1.go(fun2,["event_succ"]);
-			})
-			it('#event_err 正常', function(done){
-				var q1 = new Queue(1)
-				q1.option("event_err",function(err,Qobj){
-					if(err !== "errmsg") return done("反回错误！")
-					done()
-				})
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1,'errmsg']);
-			})
-			it('#event_err 异常', function(done){
-				var q1 = new Queue(1)
-				var errs = ['errmsg','errmsg1'],e = 0;
-				q1.option("event_err",function(err,Qobj){
-					if(err !== errs[e++]) return done("反回错误！")
-					if(e == errs.length) done()
-				})
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1,'errmsg']);
-				q1.go(function(){
-					throw 'errmsg1';
+
+			it('#event_begin , event_end 事件', function(done){
+				var q1 = new Queue(1),q2 = new Queue(1);
+				var err = 1;
+				q1.option("event_begin",function(){
+					ADD(q2);
 				});
-			})
-			it('#event_begin 正常', function(done){
-				var q1 = new Queue(1)
-				q1.option("event_begin",function(){
-					done();
+				q2.option("event_begin",function(){
+					err=0;
 				})
-				q1.push(fun2,[1]);
-				setTimeout(function(){q1.start()},200)
-			})
-			it('#event_begin 异常', function(done){
-				var q1 = new Queue(1)
-				q1.option("event_begin",function(){
+				q2.option("event_end",function(){
+					if(err) done('执行出错!')
 					done();
-				})
-				q1.push(fun2,[1]);
-				setTimeout(function(){q1.start()},200)
+				})				
+				ADD(q1,"nostart");
+				setTimeout(function(){q1.start()},50)
 			})
-			it('#event_end 正常', function(done){
+			it('#event_succ , event_err 事件', function(done){
 				var q1 = new Queue(1)
+				q1.option("event_succ",function(v,Qobj){
+					if(typeof v != 'number') return done("event_succ 反回错误！")
+				})
+				q1.option("event_err",function(err,Qobj){
+					if(!/\serr$/.test(err)) return done("event_err 反回错误！")
+				})
 				q1.option("event_end",function(){
 					done();
-				})
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-			})
-			it('#event_end 异常', function(done){
-				var q1 = new Queue(1)
-				q1.option("event_end",function(){
-					done();
-				})
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
-				q1.go(fun2,[1]);
+				})	
+				ADD(q1).start();
 			})
 		})
 		describe('#重试与超时', function(){
@@ -471,7 +480,6 @@ describe('测试Queue-fun Queue 队列类', function(){
 				})
 				var rnumb = 0,rnumb1 = 0;
 				q1.option("event_end",function(){
-					//console.log(rnumb,rnumb1)
 					if(rnumb == 0 || rnumb1 == 0) return done("未重试")
 					if(rnumb !== 5 || rnumb1 !== 5) return done("重试次数错误！")
 					done();
