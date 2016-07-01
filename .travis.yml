@@ -1,21 +1,16 @@
 language: node_js
+sudo: false
 node_js:
   - "0.10"
   - "0.12"
-  - "1.0"
-  - "1.8"
-  - "2.0"
-  - "2.2"
-  - "3.0"
-  - "3.1"
-  - "4.0"
-  - "4.2"
-  - "5.0"
-sudo: false
-before_install:
-  # Setup Node.js version-specific dependencies
-  - "test $TRAVIS_NODE_VERSION != '0.8' || npm rm --save-dev istanbul"
-script:
+  - "iojs"
+  - "4"
+  - "5"
+  - "6"
+before_script:
+  - npm install -g grunt
+  - npm install -g istanbul
+script: gulp
   # Run test script, depending on istanbul install
   - "test -n $(npm -ps ls istanbul) || npm test"
   - "test -z $(npm -ps ls istanbul) || npm run-script test-travis"

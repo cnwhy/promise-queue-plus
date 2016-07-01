@@ -123,6 +123,7 @@ var succ = function(k,done,xc){
 describe('测试Queue-fun Queue 队列类', function(){
     describe('使用非内置Promise', function(){
 		it('#原生Promise', function(done){
+			if(typeof Promise == "undefined") return done();
 			var q1 = new (QueueFun.Queue(Promise))(1);
 			var funOk = function(){done();}
 			if(q1.option("event_end") != funOk){
