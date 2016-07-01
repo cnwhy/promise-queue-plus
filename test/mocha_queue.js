@@ -1,10 +1,9 @@
 var assert = require("assert");
 var QueueFun = require('../index');
-var qq = require('q')
 var q_ = QueueFun.Q;
 var Queue = QueueFun.Queue();
 
-var maxtime = 50
+var maxtime = 30
 
 //同步函数
 function fun1(i,err){
@@ -122,10 +121,28 @@ var succ = function(k,done,xc){
 
 //普通测试
 describe('测试Queue-fun Queue 队列类', function(){
+    describe('使用非内置Promise', function(){
+		it('#原生Promise', function(done){
+			var q1 = new (QueueFun.Queue(Promise))(1);
+			var funOk = function(){done();}
+			if(q1.option("event_end") != funOk){
+				q1.option("event_end",funOk)
+			}
+			ADD(q1,"",1)
+		})
+		it('#Q 模块', function(done){
+			var q1 = new (QueueFun.Queue(require('q')))(1);
+			q1.option("event_end",function(){done();})
+			ADD(q1,"",1)
+		})
+    })
     describe('队列 插入，执行', function(){
 		describe('#单个添加测试', function(){
 			var q1 = new Queue(1)
 			it('.push(fun,args,con) OK', function(done){
+				q1.push(function(){
+					throw "err";
+				})
 				q1.push(fun2,[1],{event_succ:succ(1,done)})
 				q1.start();
 			})
@@ -443,18 +460,14 @@ describe('测试Queue-fun Queue 队列类', function(){
 			// })
 
 			it('#event_begin , event_end 事件', function(done){
-				var q1 = new Queue(1),q2 = new Queue(1);
-				var err = 1;
+				var q1 = new Queue(1);
+				var begin;
 				q1.option("event_begin",function(){
-					ADD(q2);
+					begin = 1;
 				});
-				q2.option("event_begin",function(){
-					err=0;
-				})
-				q2.option("event_end",function(){
-					if(err) done('执行出错!')
-					done();
-				})				
+				q1.option("event_end",function(){
+					if(begin) done();
+				});
 				ADD(q1,"nostart");
 				setTimeout(function(){q1.start()},50)
 			})
