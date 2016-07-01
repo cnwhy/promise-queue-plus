@@ -31,7 +31,9 @@ function fun2(i,err){
 var succ = function(k,done,xc){
 		return function(data){
 			xc && clearTimeout(xc)
-			if(data !== k) return done("返回参数错误");
+			if(data !== k){
+				return done("返回参数错误");
+			}
 			done();
 		}
 	}
@@ -71,17 +73,32 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 						resolve(1)
 					},maxtime)
 				}
-				q.Promise(callback).then(function(data){
-					assert.equal(data,1,"运行错误")
-					done();
-				},err(done))
+				q.Promise(callback).then(succ(1,done),err(done))
 			})
-			it('q(obj) >> function', function(done){
+			it('q(obj) >> value', function(done){
+				q(1).then(succ(1,done),err(done))
+			})
+			it('q(obj) >> function >> reutrn', function(done){
 				q(function(){
 					return 1
 				}).then(succ(1,done),err(done))
 			})
-			it('q(obj) >> function && then', function(done){
+			it('q(obj) >> function >> function', function(done){
+				var fun = function(){return 1;}
+				q(function(){
+					return fun;
+				}).then(succ(fun,done),err(done))
+			})
+			it('q(obj) >> function >> Likepromise >> throw', function(done){
+				q(function(){
+					var obj = {}
+					obj.then = function(a,b){
+						throw 1;
+					}
+					return obj;
+				}).then(err(done),succ(1,done))
+			})
+			it('q(obj) >> function >> Likepromise >> resolve', function(done){
 				q(function(){
 					var obj = {}
 					obj.then = function(a,b){
@@ -90,8 +107,14 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 					return obj;
 				}).then(succ(1,done),err(done))
 			})
-			it('q(obj) >> value', function(done){
-				q(1).then(succ(1,done),err(done))
+			it('q(obj) >> function >> Likepromise >> reject', function(done){
+				q(function(){
+					var obj = {}
+					obj.then = function(a,b){
+						b(1);
+					}
+					return obj;
+				}).then(err(done),succ(1,done))
 			})
 	})
 	describe('单次调用测试', function(){
@@ -182,6 +205,12 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 		})
     })
 	describe('链式调用测试', function(){
+		it('succ .then(null,null).then() ', function(done){
+			fun2(1).then().then(succ(1,done),err(done,"错误调用"))
+		})
+		it('err .then(null,null).then() ', function(done){
+			fun2(1,2).then().then(err(done,"错误调用"),succ(2,done))
+		})
 		it('.then(succ).then(succ) 1 > 1', function(done){
 			var xc = timeout_err(done,'未成功走完流程');
 			fun2(1).then(function(data){
@@ -255,6 +284,36 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 				clearTimeout(xc);
 				done();
 			}
+		})
+		it('.then(function).done()', function(done){
+			var fun = function(){return 1;}
+			fun2(1).then(function(){
+				return fun;
+			}).then(succ(fun,done),err(done,"错误调用"))
+		})
+		it('.then(Likepromise >> resolve).done()', function(done){
+			var Likepromise = {}
+			Likepromise.then = function(a,b){a(this.v+1)}
+			fun2(1).then(function(k){
+				Likepromise.v = k;
+				return Likepromise
+			}).then(succ(2,done),err(done,"错误调用"))
+		})
+		it('.then(Likepromise >> reject).done()', function(done){
+			var Likepromise = {}
+			Likepromise.then = function(a,b){b(this.v+1)}
+			fun2(1).then(function(k){
+				Likepromise.v = k;
+				return Likepromise
+			}).then(err(done,"错误调用"),succ(2,done))
+		})
+		it('.then(Likepromise >> throw err).done()', function(done){
+			var Likepromise = {}
+			Likepromise.then = function(v){throw "err"+this.v;}
+			fun2(1).then(function(k){
+				Likepromise.v = k;
+				return Likepromise
+			}).then(err(done,"错误调用"),succ("err1",done))
 		})
 		it('.then(succ,err) 1 > TypeError 测试', function(done){
 			var xc = timeout_err(done,'未成功走完流程',2);

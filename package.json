@@ -1,6 +1,6 @@
 {
   "name": "queue-fun",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "基于Promise的 运行队列控制类",
   "homepage": "https://github.com/cnwhy/queue-fun",
   "main": "index.js",

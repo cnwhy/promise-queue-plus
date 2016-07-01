@@ -31,12 +31,12 @@ queue-fun 是基于Promise的 运行队列控制类。
 
 ```javascript
 //使用内置实现的Promise
-var Queue = new queuefun.Queue() //promise实现和模仿了q的API,但比q要快 除了then, "done, spread, fail, fin"都是支持的 
+var Queue = queuefun.Queue() //promise实现和模仿了q的API,但比q要快 除了then, "done, spread, fail, fin"都是支持的 
 
 //Queue1使用q做为队列使用的promise实现
-var Queue1 = new queuefun.Queue(require("q"));
+var Queue1 = queuefun.Queue(require("q"));
 //Queue2使用原生Promise做为队列使用的promise实现
-var Queue2 = new queuefun.Queue(Promise);
+var Queue2 = queuefun.Queue(Promise);
 ```
 
 ##### 实例化队列 new queuefun.Queue()(runMax, *con*) 
