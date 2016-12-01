@@ -59,13 +59,12 @@ var succ = function(k,done,xc){
 //普通测试
 describe('测试Queue-fun内部模拟q的异步函数类', function(){
 	describe('实例化方法Promise函数',function(){
-			it('q.defer() return q.promise', function(done){
+			it('q.defer()', function(done){
 				var obj = fun2(1)
-				if(typeof obj.then == 'function'){
-					done()
-				}else{
-					done("反回参数错误")
-				}
+				obj.then(function(data){
+					if(data != 1) throw "反回值错误"
+					return fun2(2,3)
+				},err(done)).then(err(done),succ(3,done));
 			})
 			it('q.Promise(callback) ', function(done){
 				var callback = function(resolve,reject){
@@ -89,7 +88,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 					return fun;
 				}).then(succ(fun,done),err(done))
 			})
-			it('q(obj) >> function >> Likepromise >> throw', function(done){
+			it('q(obj) >> thenable >> throw', function(done){
 				q(function(){
 					var obj = {}
 					obj.then = function(a,b){
@@ -98,7 +97,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 					return obj;
 				}).then(err(done),succ(1,done))
 			})
-			it('q(obj) >> function >> Likepromise >> resolve', function(done){
+			it('q(obj) >> thenable >> resolve', function(done){
 				q(function(){
 					var obj = {}
 					obj.then = function(a,b){
@@ -107,7 +106,7 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 					return obj;
 				}).then(succ(1,done),err(done))
 			})
-			it('q(obj) >> function >> Likepromise >> reject', function(done){
+			it('q(obj) >> thenable >> reject', function(done){
 				q(function(){
 					var obj = {}
 					obj.then = function(a,b){
@@ -115,6 +114,67 @@ describe('测试Queue-fun内部模拟q的异步函数类', function(){
 					}
 					return obj;
 				}).then(err(done),succ(1,done))
+			})
+			it('q.resolve(obj) >> value', function(done){
+				q.resolve(1).then(succ(1,done),err(done))
+			})
+			it('q.resolve(obj) >> promise >> resolve', function(done){
+				q.resolve(q.Promise(function(ok,no){
+					ok(1);
+				})).then(succ(1,done),err(done))
+			})
+			it('q.resolve(obj) >> promise >> resolve', function(done){
+				q.resolve(q.Promise(function(ok,no){
+					no(1);
+				})).then(err(done),succ(1,done))
+			})
+			it('q.resolve(obj) >> function', function(done){
+				var fun = function(){return 1};
+				q.resolve(fun).then(succ(fun,done),err(done))
+			})
+			it('q.resolve(obj) >> thenable >> throw', function(done){
+				q.resolve({
+					then : function(a,b){throw 1;}
+				}).then(err(done),succ(1,done))
+			})
+			it('q.resolve(obj) >> thenable >> resolve', function(done){
+				q.resolve({
+					then : function(a,b){
+						a(1);
+					}
+				}).then(succ(1,done),err(done))
+			})
+			it('q.resolve(obj) >> thenable >> reject', function(done){
+				q.resolve({
+					then : function(a,b){
+						b(1);
+					}
+				}).then(err(done),succ(1,done))
+			})
+			it('q.reject(obj)', function(done){
+				q.reject(2).then(err(done),succ(2,done))
+			})
+			it('Promise test "this"',function(done){
+				var _t = {
+					a : 1,
+					b : 2,
+					then:function(ok,no){
+						ok(this.b)
+					}
+				};
+				var arr = [];
+				var callback = function(resolve,reject){
+					resolve(this.a)
+				}
+				arr.push(q.Promise(callback.bind(_t)));
+				arr.push(q(_t));
+				q.all(arr).then(function(data){
+					if(data[0]==1 && data[1]==2 && data.join(',')=="1,2" ){
+						done()
+					}else{
+						done(data)
+					}
+				})
 			})
 	})
 	describe('单次调用测试', function(){
