@@ -1,17 +1,4 @@
 module.exports = function(grunt){
-//兼容模板
-// var t = ""
-// t += "(function (name, factory) {"
-// t += 	"if (typeof define === 'function' && define.amd) {"
-// t += 		"define([], factory);"
-// t += 	"} else if (typeof module !== 'undefined' && module.exports) {"
-// t += 		"exports = module.exports = factory();"
-// t += 	"} else {"
-// t += 		"this[name] = factory();"
-// t += 	"};"
-// t += "}('<%= ClassName%>', function () {\n"
-// t += "<%= corders %>"
-// t += "\nreturn <%= ClassName%>;\n}));"
 	grunt.initConfig({
 		'pkg': grunt.file.readJSON('package.json'),
 		banner: '/**\n' +
