@@ -7,6 +7,6 @@
 	} else {
 		throw new Error("加载 " + name + " 模块失败！，请检查您的环境！")
 	}
-}('queueFun', function () {
-	return require('./')
+}('Queue', function () {
+	return require('./lib/index.js')(require('easy-promise/setTimeout'));
 }));

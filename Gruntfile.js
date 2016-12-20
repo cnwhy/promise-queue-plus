@@ -79,6 +79,8 @@ module.exports = function(grunt){
 	grunt.registerTask('default', ['mochaTest','browserify','uglify','clean']);
 	grunt.registerTask('test', ['mochaTest']);
 	grunt.registerTask('js', ['jshint']);
+	grunt.registerTask('pack', ['browserify','uglify']);
+
 
 	// grunt.registerTask('diy', 'diy OK',function(){
 	// 	grunt.log.writeln(this.name)

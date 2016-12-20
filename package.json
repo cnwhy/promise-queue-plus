@@ -27,9 +27,12 @@
     "Q",
     "队列"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "easy-promise": "0.0.3",
+    "extend-promise": "0.0.2"
+  },
   "devDependencies": {
-    "bluebird": "*",
     "express": "^4.12.3",
     "grunt": "^0.4.5",
     "grunt-browserify": "^3.8.0",

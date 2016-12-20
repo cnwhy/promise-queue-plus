@@ -1,13 +1,14 @@
 var assert = require("assert");
-var QueueFun = require('../index');
-var q_ = QueueFun.Q;
-var Queue = QueueFun.Queue();
-
-var maxtime = 30
+// var QueueFun = require('../index');
+// var Queue = QueueFun();
+var Queue = require('../index');
+var Q = Queue.Q;
+var MAXTIME = 30
+var NULLFUN = function(){};
 
 //同步函数
 function fun1(i,err){
-	var deferred = q_.defer();
+	var deferred = Q.defer();
 	if(err){
 		deferred.reject(err)
 	}else{
@@ -18,15 +19,15 @@ function fun1(i,err){
 
 //异步函数
 function fun2(i,err){
-	var deferred = q_.defer();
+	var deferred = Q.defer();
 	setTimeout(function(){
 		if(err){
 			deferred.reject(err)
 		}else{
 			deferred.resolve(i)
 		}
-	},maxtime)
-	//},(Math.random() * maxtime)>>0)
+	},MAXTIME)
+	//},(Math.random() * MAXTIME)>>0)
 	return deferred.promise;
 }
 
@@ -42,37 +43,37 @@ function ADD(queue,type,start){
 		nostart = 1;
 		type = "";
 	}
-	if(!type || ts.indexOf('push')){
+	if(!type || ~ts.indexOf('push')){
 		succ && queue.push(fun2,[i++]);
-		err && queue.push(fun2,[i++,"push err"]);
+		err && queue.push(fun2,[i++,"push err"]).then(null,NULLFUN);
 	}
-	if(!type || ts.indexOf('unshift')){
+	if(!type || ~ts.indexOf('unshift')){
 		succ && queue.unshift(fun2,[i++]);
-		err && queue.unshift(fun2,[i++,"unshift err"]);
+		err && queue.unshift(fun2,[i++,"unshift err"]).then(null,NULLFUN);
 	}
 	if(!nostart){
-		if(!type || ts.indexOf('go')){
+		if(!type || ~ts.indexOf('go')){
 			succ && queue.go(fun2,[i++]);
-			err && queue.go(fun2,[i++,"go err"]);
+			err && queue.go(fun2,[i++,"go err"]).then(null,NULLFUN);
 		}
-		if(!type || ts.indexOf('jump')){
+		if(!type || ~ts.indexOf('jump')){
 			succ && queue.jump(fun2,[i++]);
-			err && queue.jump(fun2,[i++,"jump err"]);
+			err && queue.jump(fun2,[i++,"jump err"]).then(null,NULLFUN);
 		}
 	}
-	if(!type || ts.indexOf('all')){
+	if(!type || ~ts.indexOf('all')){
 		var arr = [];
 		succ && arr.push([fun2,[i++]]);
 		err && arr.push([fun2,[i++,"all err"]]);
-		queue.all(arr);
+		queue.all(arr).then(null,NULLFUN);
 	}
-	if(!type || ts.indexOf('allLike')){
+	if(!type || ~ts.indexOf('allLike')){
 		var arr = [];
 		succ && arr.push(i++);
 		err && arr.push([i++,"allLike err"]);
-		queue.allLike(arr,fun2)
+		queue.allLike(arr,fun2).then(null,NULLFUN);
 	}
-	if(!type || ts.indexOf('allEach')){
+	if(!type || ~ts.indexOf('allEach')){
 		var arr = [];
 		succ && arr.push(i++);
 		err && arr.push([i++,"allEach err"]);
@@ -81,7 +82,7 @@ function ADD(queue,type,start){
 		}
 		queue.allEach(arr,fun_temp)
 	}
-	if(!type || ts.indexOf('allMap')){
+	if(!type || ~ts.indexOf('allMap')){
 		var map = {};
 		succ && (map.a = i++);
 		err && (map.b = [i++,"allMap err"]);
@@ -110,45 +111,47 @@ var succ = function(k,done,xc){
 		c = c ? c : 1;
 		return setTimeout(function(){
 				done();
-			},(maxtime+100)*c)
+			},(MAXTIME+100)*c)
 	}
 	,timeout_err = function(done,errmsg,c){
 		c = c ? c : 1;
 		return setTimeout(function(){
 				done(errmsg);
-			},(maxtime+100)*c)
+			},(MAXTIME+100)*c)
 	}
 
 //普通测试
 describe('测试Queue-fun Queue 队列类', function(){
-    describe('使用非内置Promise', function(){
-		it('#原生Promise', function(done){
-			if(typeof Promise == "undefined") return done();
-			var q1 = new (QueueFun.Queue(Promise))(1);
-			var funOk = function(){done();}
-			if(q1.option("event_end") != funOk){
-				q1.option("event_end",funOk)
-			}
-			ADD(q1,"",1)
-		})
-		it('#Q 模块', function(done){
-			var q1 = new (QueueFun.Queue(require('q')))(1);
-			q1.option("event_end",function(){done();})
-			ADD(q1,"",1)
-		})
-    })
+  //   describe('使用非内置Promise', function(){
+		// it('#原生Promise', function(done){
+		// 	if(typeof Promise == "undefined") return done();
+		// 	var q1 = new (QueueFun(Promise))(1);
+		// 	var funOk = function(){done();}
+		// 	if(q1.option("event_end") != funOk){
+		// 		q1.option("event_end",funOk)
+		// 	}
+		// 	ADD(q1,"",1)
+		// })
+		// it('#Q 模块', function(done){
+		// 	var q1 = new (QueueFun(require('q')))(1);
+		// 	q1.option("event_end",function(){done();})
+		// 	ADD(q1,"",1)
+		// })
+		// it('#bluebird 模块', function(done){
+		// 	var q1 = new (QueueFun(require('bluebird')))(1);
+		// 	q1.option("event_end",function(){done();})
+		// 	ADD(q1,"",1)
+		// })
+  //   })
     describe('队列 插入，执行', function(){
 		describe('#单个添加测试', function(){
 			var q1 = new Queue(1)
 			it('.push(fun,args,con) OK', function(done){
-				q1.push(function(){
-					throw "err";
-				})
 				q1.push(fun2,[1],{event_succ:succ(1,done)})
 				q1.start();
 			})
 			it('.push(fun,args,con) err', function(done){
-				q1.push(fun2,[1,2],{event_err:succ(2,done)})
+				q1.push(fun2,[1,2],{event_err:succ(2,done)}).then(null,NULLFUN)
 				q1.start();
 			})
 			it('.push(fun,args)', function(done){
@@ -226,17 +229,17 @@ describe('测试Queue-fun Queue 队列类', function(){
 					var _err = i===2 ? 2 : null;
 					q1.push(fun2,[i,_err]).then(function(data){
 						k.push(data)
-					})
+					},NULLFUN)
 					q2.push(fun2,[i,_err]).then(function(data){
 						k1.push(data)
-					})
+					},NULLFUN)
 				}
 				q1.start();
 				q2.start();
 				function endfun(){
 					if(q1.isStart || q2.isStart) return;
-					if(k.join('') !== '0134') return done("执行顺序错误");
-					if(k1.join('') !== '0134') return done("多并发执行顺序错误");
+					if(k.join('') !== '0134') return done("执行顺序错误" + k.join(''));
+					if(k1.join('') !== '0134') return done("多并发执行顺序错误" + k1.join(''));
 					done();
 				}
 			})
@@ -248,10 +251,10 @@ describe('测试Queue-fun Queue 队列类', function(){
 					var _err = i===2 ? 2 : null;
 					q1.unshift(fun2,[i,_err]).then(function(data){
 						k.push(data)
-					})
+					},NULLFUN)
 					q2.unshift(fun2,[i,_err]).then(function(data){
 						k1.push(data)
-					})
+					},NULLFUN)
 				}
 				q1.start();
 				q2.start();
@@ -270,10 +273,10 @@ describe('测试Queue-fun Queue 队列类', function(){
 					var _err = i===2 ? 2 : null;
 					q1.go(fun2,[i,_err]).then(function(data){
 						k.push(data)
-					})
+					},NULLFUN)
 					q2.go(fun2,[i,_err]).then(function(data){
 						k1.push(data)
-					})
+					},NULLFUN)
 				}
 				function endfun(){
 					if(q1.isStart || q2.isStart) return;
@@ -290,10 +293,10 @@ describe('测试Queue-fun Queue 队列类', function(){
 					var _err = i===2 ? 2 : null;
 					q1.jump(fun2,[i,_err]).then(function(data){
 						k.push(data)
-					})
+					},NULLFUN)
 					q2.jump(fun2,[i,_err]).then(function(data){
 						k1.push(data)
-					})
+					},NULLFUN)
 				}
 				function endfun(){
 					if(q1.isStart || q2.isStart) return;
@@ -395,7 +398,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				q1.start();
 				setTimeout(function(){
 					p.then(succ(1,done))
-				},maxtime*1.1)
+				},MAXTIME*1.1)
 			})
 			it('.stop()', function(done){
 				var k =  [];
@@ -414,7 +417,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 						if(k.join('') !== "01234") return done("恢复执行出现问题！")
 						done();
 					})
-				},maxtime*2.1)
+				},MAXTIME*2.1)
 			})
 			it('.clear()', function(done){
 				var k =  [],ke = [];
@@ -431,24 +434,24 @@ describe('测试Queue-fun Queue 队列类', function(){
 				setTimeout(function(){
 					if(k.join('') !== "0" || ke.join('') !== "2222") return done("清除执行时出现问题！")
 					done();
-				},maxtime*2.1);
+				},MAXTIME*2.1);
 			})
 			it('.setMax()', function(done){
 				var k =  [],ke = [];
-				for(var i = 0; i < 100; i++ ){
+				var mn = 50
+				for(var i = 0; i < mn; i++ ){
 					q1.push(fun2,[i]).then(function(data){
 						k.push(data)
 					},function(err){
 						ke.push(err)
 					})
-				}
-				q1.start()
-				q1.setMax(100)
+				};
+				q1.start();
+				q1.setMax(mn);
 				setTimeout(function(){
-					//console.log(k.join()) // 0 - 99
-					if(k.length < 100) return done("清除执行时出现问题！")
+					if(k.length < mn) return done("设置setMax出现问题！")
 					done();
-				},maxtime*1.1)
+				},MAXTIME*1.5)
 			})
 		})
 		describe('#队列事件测试', function(){
@@ -472,6 +475,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				ADD(q1,"nostart");
 				setTimeout(function(){q1.start()},50)
 			})
+
 			it('#event_succ , event_err 事件', function(done){
 				var q1 = new Queue(1)
 				q1.option("event_succ",function(v,Qobj){
@@ -485,6 +489,30 @@ describe('测试Queue-fun Queue 队列类', function(){
 				})	
 				ADD(q1).start();
 			})
+
+			it('#事件顺序测试', function(done){
+				var q1 = new Queue(1);
+				var arr = [];
+				q1.option("event_begin",function(v,Qobj){
+					arr.push(1)
+				})
+				q1.option("event_end",function(v,Qobj){
+					arr.push(4)
+					if(arr.join("") != "122334") done("顺序错误!")
+					else done();
+				})
+				q1.option("event_succ",function(v,Qobj){
+					arr.push(2)
+				})
+				q1.option("event_err",function(err,Qobj){
+					arr.push(3)
+				})
+				q1.push(function(){return 1});
+				ADD(q1,"push")
+				q1.push(function(){throw 1}).then(null,NULLFUN);
+				q1.start();
+			})
+
 		})
 		describe('#重试与超时', function(){
 			it('#重试 默认', function(done){
@@ -516,7 +544,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				})
 				var rnumb = 0,rnumb1 = 0;
 				q1.go(function(){
-					var def = q_.defer()
+					var def = Q.defer()
 					setTimeout(function(){
 						rnumb++;
 						if(rnumb<5) def.reject("err");
@@ -533,7 +561,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 					"timeout":100
 				})
 				q1.go(function(){
-					var def = q_.defer();
+					var def = Q.defer();
 					setTimeout(function(){
 						def.resolve("OK")
 					},200)
@@ -546,7 +574,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 					"timeout":100
 				})
 				q1.go(function(){
-					var def = q_.defer();
+					var def = Q.defer();
 					setTimeout(function(){
 						def.resolve("OK")
 					},200)
