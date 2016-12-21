@@ -1,6 +1,5 @@
-var queuefun = require('../index') 
-var Queue = queuefun.Queue();
-var q = queuefun.Q; //内置的Promise，仿Q的API
+var Queue = require('../');
+var q = Queue.Q; //内置的Promise，仿Q的API
 
 //定义一些方法
 function event_succ(data,obj){
@@ -22,29 +21,20 @@ function event_add(){
 		this.start();
 	}
 }
-var q1 = new Queue(1)
-q1.push(function(){return "123"}).then(console.log,console.log);
-q1.start();
-return;
-//new Queue([并行数],<运行成功>,<远行出错>,<队列开始>,<队列结束>,<config>) 并行数必须,其他可省略 config 为最后一个参数
-var queue1 = new Queue(1,
-	event_succ,
-	event_err,
-	event_begin,
-	event_end,
-	{
-		"retryON":0 //出错重试次数 默认0;
+
+// var q1 = new Queue(1)
+// q1.push(function(){return "123"}).then(console.log,console.log);
+// q1.start();
+
+//new Queue([并行数],<options>) 并行数必须
+var queue1 = new Queue(1,{
+		"event_succ": event_succ
+		,"event_err": event_err
+		,"event_begin": event_begin
+		,"event_end": event_end	
+		,"retryON":0 //出错重试次数 默认0;
 		,'event_add':event_add //event_add只会在push/unshift方法添向项时才触发！
 	})
-//全config的方式 实例化和 queue1 功能抑制的队列
-var queue2 = new Queue(1,{
-    "event_succ": event_succ
-    ,"event_err": event_err
-    ,"event_begin": event_begin
-    ,"event_end": event_end
-    ,"event_add": event_add
-    ,"retryON": 0
-});
 
 //一个Promise的异步方法
 function testfun(i){
@@ -61,7 +51,7 @@ function testfun(i){
 
 //用push添加项 不会启动队列；
 queue1.push(testfun,['Q1'])
-queue1.addArray([1,2,3,4,5],function(v,i,arr){
+queue1.allArray([1,2,3,4,5],function(v,i,arr){
 	var deferred = q.defer();
 	setTimeout(function(){
 		console.log(v)
@@ -72,7 +62,6 @@ queue1.addArray([1,2,3,4,5],function(v,i,arr){
 	console.log(data);
 })
 
-return;
 setTimeout(function(){
 	//用go添加项 将会启动队列；
 	queue1.go(testfun,['Q2'])
@@ -91,27 +80,5 @@ setTimeout(function(){
 	queue1.go(testfun,['Q4'],con)
 	//标记此对象不会走队列的成功失败事件.
 	queue1.go(testfun,['Q5'],{Queue_event:0}).then(function(data){console.log(data + "不会触发队列初始化时定义的成功/失败方法")}) 
-	//promise的链式操作没有问题
-	queue1.go(testfun,['Q6'],{Queue_event:0})
-	.then(function(data){
-		console.log(data);
-		var deferred = q.defer();
-		setTimeout(function(){
-			deferred.resolve(data + "+");
-		},500)
-		return deferred.promise;
-	}).then(function(data){
-		console.log(data);
-		return data + "+"
-	}).then(function(data){
-		console.log(data)
-		setTimeout(function(){add2()},1000);
-		throw "Q6 then err";
-	}).done(null,console.error)
+	
 },1000)
-
-function add2(){
-	for(var i = 0 ;i<10; i++){
-		queue2.push(testfun,[i],{Queue_event:1})
-	}
-}

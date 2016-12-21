@@ -1,0 +1,24 @@
+{
+  "name": "queue-fun",
+  "description": "基于Promise的持续队列",
+  "main": "dist/queue-fun.js",
+  "authors": [
+    "cnwhy <w.why@163.com>"
+  ],
+  "license": "BSD",
+  "keywords": [
+    "queue",
+    "Promise",
+    "Async",
+    "Q",
+    "队列"
+  ],
+  "homepage": "https://github.com/cnwhy/queue-fun",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

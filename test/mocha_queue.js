@@ -120,6 +120,50 @@ var succ = function(k,done,xc){
 			},(MAXTIME+100)*c)
 	}
 
+var addnoFun = function(queue,type){
+	var noFuns = [null,undefined,NaN,0,1,"","a",{a:1},[1,2,3],/abc/]
+	type = type || "";
+	var ts = type.split("|");
+	var errs = [];
+	if(!type || ~ts.indexOf('push')){
+		noFuns.forEach(function(v,i){
+			try{
+				queue.push(v);
+			}catch(e){
+				errs.push(e)
+			}
+		})
+	}
+	if(!type || ~ts.indexOf('unshift')){
+		noFuns.forEach(function(v,i){
+			try{
+				queue.unshift(v);
+			}catch(e){
+				errs.push(e)
+			}
+		})
+	}
+	if(!type ||  ~ts.indexOf('go')){
+		noFuns.forEach(function(v,i){
+			try{
+				queue.go(v);
+			}catch(e){
+				errs.push(e)
+			}
+		})
+	}
+	if(!type ||  ~ts.indexOf('jump')){
+		noFuns.forEach(function(v,i){
+			try{
+				queue.jump(v);
+			}catch(e){
+				errs.push(e)
+			}
+		})
+	}
+	return errs;
+}
+
 //普通测试
 describe('测试Queue-fun Queue 队列类', function(){
   //   describe('使用非内置Promise', function(){
@@ -143,9 +187,24 @@ describe('测试Queue-fun Queue 队列类', function(){
 		// 	ADD(q1,"",1)
 		// })
   //   })
+  //   
+ 
     describe('队列 插入，执行', function(){
 		describe('#单个添加测试', function(){
 			var q1 = new Queue(1)
+			it('插入非函数报错', function(done){
+				var errs = addnoFun(q1);
+				if(errs.length != 40){
+					return done("错误数目不对");
+				}
+				for(var i=0; i < errs.length; i++){
+					var e = errs[i];
+					if(!(e instanceof TypeError && e.message.indexOf("Queues only support function") == 0)){
+						return done("错误信息不对")
+					}
+				}
+				done();
+			})
 			it('.push(fun,args,con) OK', function(done){
 				q1.push(fun2,[1],{event_succ:succ(1,done)})
 				q1.start();
@@ -311,17 +370,20 @@ describe('测试Queue-fun Queue 队列类', function(){
 			var q1 = new Queue(1)
 			var q2 = new Queue(3)
 			it('.all([[fun,arg,con]],start,jump) all ok', function(done){
-				var k = [],k1=[];
+				var k = [],k1=[],jump;
 				var arr = [
 					[fun2,[0]],
 					[fun2,[1]],
-					[fun2,[2]],
-					[fun2,[3]],
-					[fun2,[4]]
+					[fun2,[2]]
 				]
-				q2.all(arr,1).then(function(data){
-					if(data.join('') !== '01234') return done("返回错误");
+				q1.all(arr,1).then(function(data){
+					if(data.join('') !== '012') return done("返回错误");
 					done();
+				},err(done))
+				q1.jump(fun2,[1]).then(function(){jump = 1;})
+				q1.all(arr,1,1).then(function(data){
+					if(jump) return done("优先执行出错");
+					if(data.join('') !== '012') return done("返回错误");
 				},err(done))
 			})
 			it('.all([[fun,arg,con]],start,jump) 2 > err', function(done){
@@ -329,18 +391,21 @@ describe('测试Queue-fun Queue 队列类', function(){
 				var arr = [
 					[fun2,[0]],
 					[fun2,[1]],
-					[fun2,[2,2]],
-					[fun2,[3]],
-					[fun2,[4]]
+					[fun2,[2,2]]
 				]
-				q2.all(arr,1).then(err(done),succ(2,done))
+				q2.all(arr,1,1).then(err(done),succ(2,done))
 			})
 			it('.allLike([arg1,arg2],fun,con,start,jump) all ok', function(done){
-				var k = [],k1=[];
-				var arr = [0,1,2,3,4]
-				q2.allLike(arr,fun2,1).then(function(data){
-					if(data.join('') !== '01234')return done("返回错误");
+				var k = [],k1=[],jump;
+				var arr = [0,1,2]
+				q1.allLike(arr,fun2,1).then(function(data){
+					if(data.join('') !== '012')return done("返回错误");
 					done();
+				},err(done))
+				q1.jump(fun2,[1]).then(function(){jump = 1;})
+				q1.allLike(arr,fun2,1,1).then(function(data){
+					if(jump) return done("优先执行出错");
+					if(data.join('') !== '012') return done("返回错误");
 				},err(done))
 			})
 			it('.allLike([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
@@ -349,14 +414,19 @@ describe('测试Queue-fun Queue 队列类', function(){
 				q2.allLike(arr,fun2,{},1).then(err(done),succ(2,done))
 			})
 			it('.allEach([arg1,arg2],fun,con,start,jump) all ok', function(done){
-				var k = [],k1=[];
-				var arr = [0,1,2,3,4]
+				var k = [],k1=[],jump;
+				var arr = [0,1,2]
 				function fun_temp(v,i,arr){
 					return fun2(v);
 				}
-				q2.allEach(arr,fun_temp,{},1).then(function(data){
-					if(data.join('') !== '01234') return done("返回错误");
+				q1.allEach(arr,fun_temp,{},1).then(function(data){
+					if(data.join('') !== '012') return done("返回错误");
 					done();
+				},err(done));
+				q1.jump(fun2,[1]).then(function(){jump = 1;})
+				q1.allEach(arr,fun_temp,1,1).then(function(data){
+					if(jump) return done("优先执行出错");
+					if(data.join('') !== '012') return done("返回错误");
 				},err(done))
 			})
 			it('.allEach([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
@@ -369,14 +439,19 @@ describe('测试Queue-fun Queue 队列类', function(){
 				q2.allEach(arr,fun_temp,1).then(err(done),succ(2,done))
 			})
 			it('.allMap(map,fun,con,start,jump) all > ok', function(done){
-				var k = [],k1=[];
+				var k = [],k1=[],jump;
 				var map = {a:1,b:2,c:3}
 				function fun_temp(v,i,map){
 					return fun2(v);
 				}
-				q2.allMap(map,fun_temp,1).then(function(data){
+				q1.allMap(map,fun_temp,1).then(function(data){
 					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
 					done();
+				},err(done))
+				q1.jump(fun2,[1]).then(function(){jump = 1;})
+				q1.allMap(map,fun_temp,1,1).then(function(data){
+					if(jump) return done("优先执行出错");
+					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
 				},err(done))
 			})
 			it('.allMap(map,fun,con,start,jump) all > b > err', function(done){
@@ -453,6 +528,14 @@ describe('测试Queue-fun Queue 队列类', function(){
 					done();
 				},MAXTIME*1.5)
 			})
+			it('.setMax(-1) ', function(done){
+				q1.onError = function(err){
+					if(err.message == 'The "max" value is invalid'){
+						done();
+					}
+				}
+				q1.setMax(-1);
+			})
 		})
 		describe('#队列事件测试', function(){
 			// var q1 = new Queue(1,{
@@ -462,34 +545,6 @@ describe('测试Queue-fun Queue 队列类', function(){
 			// 	,"event_end":function(){}    //队列完成
 			// 	,"event_add":function(){}    //有执行项添加进执行单元后执行
 			// })
-
-			it('#event_begin , event_end 事件', function(done){
-				var q1 = new Queue(1);
-				var begin;
-				q1.option("event_begin",function(){
-					begin = 1;
-				});
-				q1.option("event_end",function(){
-					if(begin) done();
-				});
-				ADD(q1,"nostart");
-				setTimeout(function(){q1.start()},50)
-			})
-
-			it('#event_succ , event_err 事件', function(done){
-				var q1 = new Queue(1)
-				q1.option("event_succ",function(v,Qobj){
-					if(typeof v != 'number') return done("event_succ 反回错误！")
-				})
-				q1.option("event_err",function(err,Qobj){
-					if(!/\serr$/.test(err)) return done("event_err 反回错误！")
-				})
-				q1.option("event_end",function(){
-					done();
-				})	
-				ADD(q1).start();
-			})
-
 			it('#事件顺序测试', function(done){
 				var q1 = new Queue(1);
 				var arr = [];
@@ -513,13 +568,66 @@ describe('测试Queue-fun Queue 队列类', function(){
 				q1.start();
 			})
 
+			it('#队列事件出错捕获 , onError', function(done){
+				var errnb = {};
+				var throwfun = function(err){
+					return function(){
+						throw err;
+					}
+				}
+				var q1 = new Queue(1,{
+					event_begin:throwfun("event_begin")
+					,event_end:throwfun("event_end")
+					,event_succ:throwfun("event_succ")
+					,event_err:throwfun("event_err")
+				});
+				q1.onError = function(err){
+					if(errnb[err]){
+						errnb[err] += 1
+					}else{
+						errnb[err] = 1;
+					}
+					if(err == "event_end"){
+						if(errnb["event_begin"] == 1
+							&& errnb["event_end"] == 1
+							&& errnb["event_err"] == 2
+							&& errnb["event_succ"] == 2){
+							done()
+						}else{
+							done("onError 运行错误")
+						}
+					}
+				}
+				q1.push(function(){return 1});
+				ADD(q1,"push")
+				q1.push(function(){throw 1}).then(null,NULLFUN)
+				q1.start();
+			})
+
+			it('#event_succ , event_err 事件', function(done){
+				var q1 = new Queue(1)
+				q1.option("event_succ",function(v,Qobj){
+					if(typeof v != 'number') return done("event_succ 反回错误！")
+				})
+				q1.option("event_err",function(err,Qobj){
+					if(!/\serr$/.test(err)) return done("event_err 反回错误！")
+				})
+				q1.option("event_end",function(){
+					done();
+				})	
+				ADD(q1).start();
+			})
+
+
+
 		})
 		describe('#重试与超时', function(){
 			it('#重试 默认', function(done){
 				var q1 = new Queue(2,{
-					"retryNo":5
-					,"retryType":0               //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
-				})
+					"retry":0
+					,"retry_type":0               //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
+				});
+				if(q1.option("retry") == 0) q1.option("retry",5);
 				var rnumb = 0,rnumb1 = 0;
 				q1.option("event_end",function(){
 					if(rnumb == 0 || rnumb1 == 0) return done("未重试")
@@ -539,22 +647,49 @@ describe('测试Queue-fun Queue 队列类', function(){
 			})
 			it('#重试 优先', function(done){
 				var q1 = new Queue(1,{
-					"retryNo":5
-					,"retryType":1 //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
+					"retry":5
+					,"retry_type":1 //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
 				})
 				var rnumb = 0,rnumb1 = 0;
 				q1.go(function(){
 					var def = Q.defer()
 					setTimeout(function(){
 						rnumb++;
-						if(rnumb<5) def.reject("err");
+						if(rnumb<6) def.reject("err");
 						else def.resolve(1);
 					},20)
 					return def.promise;
 				})
 				q1.go(function(){
 					return rnumb
-				}).then(succ(5,done),err(done))
+				}).then(succ(6,done),err(done))
+			})
+			it('#重试 优先队列设置', function(done){
+				var q1 = new Queue(1,{
+					"retry":5
+					,"retry_type":1 //重试模式
+				})
+				var qobj = {
+					"retry":3
+					,"retry_type":0 //重试模式
+				}
+				var rnumb = 0,rnumb1 = 0;
+				q1.go(function(){
+					var def = Q.defer()
+					setTimeout(function(){
+						rnumb++;
+						if(rnumb<5) def.reject(rnumb);
+						else def.resolve(1);
+					},20)
+					return def.promise;
+				},qobj).then(function(){
+					done("重试出问题2");
+				},function(err){
+					if (err != 4) done("重试出问题1")
+				})
+				q1.go(function(){
+					return rnumb
+				},qobj).then(succ(1,done),err(done))
 			})
 			it('#超时 ', function(done){
 				var q1 = new Queue(2,{

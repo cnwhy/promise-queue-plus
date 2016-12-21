@@ -1,11 +1,25 @@
 "use strict";
 var express = require('express');
-var Queuefun = require('../index');
-var Queue = Queuefun.Promise();
-var queue = new Queue(1000)
-var q = Queuefun.Q;
+var QueueFun = require('../');
+var q = QueueFun.Q;
 var app = express();
 var sp = 500;
+
+var queue = new QueueFun(1,{
+	'event_add' : setBusy
+	,'event_succ' : setBusy
+	,'event_err' : setBusy
+})
+
+var isBusy = false
+function setBusy(){
+	if(this.lins.length > 5){
+		isBusy = true;
+	}
+	if(this.lins.length < 2){
+		isBusy = false;
+	}
+}
 
 function cb(sp,cb){
 	setTimeout(cb,sp)
@@ -18,6 +32,13 @@ function promfun1(sp,i){
 	return deferred.promise;
 }
 
+app.use(function(req, res, next){
+	if(isBusy){
+		res.end("sever busy!")
+	}else{
+		next();
+	};
+})
 
 app.all('/', function(req, res, next){
 	res.end("hello world!")
@@ -41,7 +62,7 @@ app.all('/test3', function(req, res, next){
 		next(new Error(err));
 	})
 });
-app.listen(11111);
+app.listen(8800);
 
 
 

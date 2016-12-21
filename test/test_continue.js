@@ -1,36 +1,23 @@
 //持续运行测试
-var q = require("../lib/q");
-var alignment = require('../index').Queue();
+var alignment = require('../index');
+var q = alignment.Q;
 
 var leng =50000;
-var minN = 500
+var minN = 2000
 
-var alignment1 = new alignment(1000,function(data){
-	//console.log(">>>>>>>>>>>>", arguments)
-	//console.log('第' + data + '个事件完成 - 正在运行的中的事件数：' + alignment1.ing + ' - 剩余运行队列：' + alignment1.lins.length)
-	(data%5000 == 0) && console.log('第' + data + '个事件完成 - 正在运行的中的事件数：' + alignment1.ing + ' - 剩余运行队列：' + alignment1.lins.length)
-	if(alignment1.lins.length<minN){
-		console.log('队列少于'+minN+'添加'+50000+'！')
-		adding || adde();
-	}
-},function(err,obj){
-	console.log(err)
-	//obj.errNumber < 3 && this.jump(obj)  // 运行次数小于3 则重试
-},null,function(){
-	console.log("运行队列己空!",alignment1.ing)
-})
+var alignment1 = new alignment(1000)
 
 //console.log(alignment1)
 function testfun(i){
 	var deferred = q.defer();
 	setTimeout(function(){
-		if(i%8000 == 1){
-			deferred.reject(new Error("err " + i))
+		if(i%2 == 1){
+			deferred.reject(i)
 		}else{
 			deferred.resolve(i)
 		}
 		//deferred.resolve(i)
-	},(Math.random() * 1000)>>0)
+	},Math.random()*30>>0)
 	return deferred.promise;
 }
 
@@ -43,24 +30,16 @@ function adde(){
 			var k = n++;
 			alignment1.go(testfun,[k],{
 				'event_succ':function(data){
-					//console.log(">>>>>>>>>>>>", arguments)
-					//console.log('第' + data + '个事件完成 - 正在运行的中的事件数：' + alignment1.ing + ' - 剩余运行队列：' + alignment1.lins.length)
-					(data%5000 == 0) && console.log('第' + data + '个事件完成 - 运行中事件数：' + this.ing + ' - 剩余：' + this.lins.length)
-					if(this.lins.length<minN){
-						console.log('队列少于'+minN+'添加'+50000+'！')
-						adding || adde();
-					}
+					setTimeout((function(){
+						(data%20000 == 0) && console.log('第' + data + '个事件完成 - 运行中事件数：' + this.ing + ' - 剩余：' + this.lins.length)
+						if(this.lins.length<minN){
+							console.log('队列少于'+minN+'添加'+50000+'！')
+							adding || adde();
+						}
+					}).bind(this),0)
 				}
-				,'event_err':function(err){
-					console.log(err)
-				}
-				,Queue_event:0
-			})
-			// .done(function(data){
-			// 	//(data%1000 == 0) && console.log('第' + data + '个事件完成 - 正在运行的中的事件数：' + alignment1.ing + ' - 剩余运行队列：' + alignment1.lins.length)
-			// },function(err){
-			// 	//console.log(err)
-			// })
+				,run_queue_event:0
+			}).then(null,function(){})
 		}()
 	}
 	adding = 0;
