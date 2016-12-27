@@ -58,7 +58,7 @@ function test(P,name){
 	}
 	var d1 = new Date();
 	console.log("添加 " + maxl + " 元素耗时  ---- " + (d1 - d0))
-	queue.option("event_end",function(){
+	queue.option("event_queue_end",function(){
 		var d2 = new Date();
 		console.log("" + bxs + " 并行完成队列耗时  ---- " + (d2 - d1))
 		console.log('<<<<<<<<<<<<<<')
@@ -68,14 +68,14 @@ function test(P,name){
 	return def.promise;
 }
 
-var readline = require('readline');
-var rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+// var readline = require('readline');
+// var rl = readline.createInterface({
+//   input: process.stdin,
+//   output: process.stdout
+// });
 
-rl.question("开始测试? ", function(answer) {
-	rl.close();
+// rl.question("开始测试? ", function(answer) {
+// 	rl.close();
 	//test0().then(test1).then(test2).then(test3)
 	var i = Ps.length - 1;
 	function next(){
@@ -88,7 +88,7 @@ rl.question("开始测试? ", function(answer) {
 		i--;
 	}
 	next();
-});
+//});
 
 //var queue = new (QueueFun.Queue(nq))(1);
 // queue.push(function(){

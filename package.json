@@ -30,7 +30,7 @@
   "dependencies": {
     "bluebird": "^3.4.6",
     "easy-promise": "0.0.3",
-    "extend-promise": "0.0.2"
+    "extend-promise": "0.0.4"
   },
   "devDependencies": {
     "express": "^4.12.3",
@@ -49,5 +49,5 @@
     "name": "cnwhy",
     "email": "w.why@163.com"
   },
-  "license": "BSD"
+  "license": "BSD-2-Clause"
 }

@@ -1,7 +1,7 @@
 /*!
  * queue-fun v1.0.0
  * Homepage https://github.com/cnwhy/queue-fun
- * License BSD
+ * License BSD-2-Clause
  */
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (name, factory) {
@@ -16,134 +16,329 @@
 }('QueueFun', function () {
 	return require('../lib/index.js')(require('easy-promise/setTimeout'));
 }));
-},{"../lib/index.js":2,"easy-promise/setTimeout":3}],2:[function(require,module,exports){
+},{"../lib/index.js":2,"easy-promise/setTimeout":4}],2:[function(require,module,exports){
 "use strict";
 var epc = require("extend-promise/src/extendClass");
+var utils = require("./utils");
 module.exports = function(Promise){	
 	var _Promise;
 	setPromise(Promise);
-	var ONERROR = (function(){//兼容IE低版本浏览器
-		if(typeof console == 'object' && typeof console.error == "function"){ 
-			return function(err){
-				console.error(err);
-			}
-		}
-		return function(){};
-	})();
+	var ONERROR = function(err){
+		try{
+			console.error(err);
+		}catch(e){}
+	};
 
 	function setPromise(Promise){
-		_Promise = Queue.Q = {};
-		epc(Promise,_Promise);	
+		_Promise = Queue.Q = epc(Promise,{});
 	};
 
 	Queue.setPromise = setPromise;
 
-	function Queue(max) {
-		var def = {
-			"event_succ":function(){}    //成功
-			,"event_err":function(){}    //失败
-			,"event_begin":function(){}  //队列开始
-			,"event_end":function(){}    //队列完成
-			,"event_add":function(){}    //有执行项添加进执行单元后执行
-			,"retry":0				     //单元出错重试次数
-			,"retry_type":0              //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
-			,"timeout":0
-		}
-		this.max = max;
-		this.lins = [];
-		this.ing = 0;
-		this.isStart = 0;
-		this.isStop = 0;
-		this._option = def
-		this.onError = ONERROR;
-		var _option = arguments[arguments.length-1];
-		if(typeof _option == "object"){
-			for(var i in def){
-				if(typeof _option[i] != 'undefined'){
-					this._option[i] = _option[i]
-				}
-			}
+
+	function maxFormat(max){
+		var _max = (+max)>>0;
+		if(_max > 0){
+			return _max;
+		}else{
+			throw new Error('The "max" value is invalid')
 		}
 	}
-	function toPromise(fun){
+
+	function toPromise(fn){
 		return _Promise.resolve(1).then(function(){
-			return fun();
+			return fn();
 		});
 	}
 
-	function Queueobj(args){
+	/**
+	 * 队列类
+	 * @param {Number} max 队列最大并行数
+	 * @param {Number} options 队列其他配置
+	 */
+	function Queue(max,options) {
+		var self = this;
 		var def = {
-			'errNo':0
-			,'run_queue_event':1
+			"event_queue_begin":null    //队列开始
+			,"event_queue_end":null     //队列完成
+			,"event_queue_add":null     //有执行项添加进执行单元后执行
+			,"event_item_resolve":null  //成功
+			,"event_item_reject":null   //失败
+			,"event_item_finally":null  //一个执行单元结束后
+			,"retry":0                  //执行单元出错重试次数
+			,"retry_type":0             //重试模式 0/false:搁置执行(插入队列尾部重试),1/true:优先执行 (插入队列头部重试)
+			,"timeout":0                //执行单元超时时间(毫秒)
+		}
+		var _queue = [];
+		var _max = maxFormat(max);
+		var _runCount = 0;
+		var _isStart = false;
+		var _isStop = 0;
+		this._options = def
+		this.onError = ONERROR;
+
+		if(utils.isObject(options)){
+			for(var i in options){
+				if(def.hasOwnProperty(i)) def[i] = options[i]
+			}
+		}
+
+		//最大并行数
+		this.getMax = function(){
+			return _max;
+		}
+		this.setMax = function(max){
+			try{
+				_max = maxFormat(max);
+				if(!_isStop && _runCount) self.start();
+			}catch(e){
+				onError.call(self,e)
+			}
+		}
+		//正在排队的项数
+		this.getQueueLength = function(){
+			return _queue.length;
+		}
+		//正在运行的项数
+		this.getRunCount = function(){
+			return _runCount;
+		}
+		//队列是否已开始运行
+		this.isStart = function(){
+			return !!_isStart;
+		}
+
+		/**
+		 * 向队列插入执行单元
+		 * @param {queueUnit} unit 执行单元对像
+		 * @param {bool} stack  是否以栈模式(后进先出)插入
+		 * @param {bool} start  是否启动队列
+		 * @param {bool} noAdd  是否调用队列event_queue_add方法(重试模式需要)
+		 */
+		this._addItem = function(unit,stack,start,noAdd){
+			if(!(unit instanceof QueueUnit)) throw new TypeError('"unit" is not QueueUnit')
+			if(stack){
+				_queue.unshift(unit);
+			}else{
+				_queue.push(unit);
+			}
+			noAdd || runAddEvent.call(self,unit);
+			if(start){
+				self.start();
+			}else{
+				_isStart && queueRun();
+			}
+		}
+		
+		//执行下一项
+		function next(){
+			if(_runCount < _max && !_isStop && _queue.length > 0){
+				var unit = _queue.shift()
+				//if(unit){
+					var xc_timeout
+						,_mark=0
+					var onoff = unit._options.queue_event_onoff
+						,timeout = +getOption('timeout',unit,self)
+						,retryNo = getOption('retry',unit,self)
+						,retryType = getOption('retry_type',unit,self)
+						,_self = unit._options.self
+					var fix = function(){
+						if(xc_timeout) clearTimeout(xc_timeout)
+						xc_timeout = 0;
+						if(_mark++) return true;
+						_runCount--;
+					}
+
+					var afinally = function(){
+						if(runQueueUnitEvent.call(unit,'event_item_finally',self,self,unit) !== false){
+							onoff && runQueueEvent.call(self,'event_item_finally',self,unit);
+						}
+					}
+
+					var issucc = function(data){
+						if(fix()) return;
+						unit.defer.resolve(data);  //通知执行单元,成功
+						if(runQueueUnitEvent.call(unit,'event_item_resolve',self,data,self,unit) !== false){
+							onoff && runQueueEvent.call(self,'event_item_resolve',data,self,unit);
+						}
+						afinally();
+					}
+
+					var iserr = function(err){
+						if(fix()) return;
+						if(retryNo > unit._errNo++){
+							self._addItem(unit,retryType,true,false)
+						}else{
+							unit.defer.reject(err);  //通知执行单元,失败
+							if(runQueueUnitEvent.call(unit,'event_item_reject',self,err,self,unit) !== false){
+								onoff && runQueueEvent.call(self,'event_item_reject',err,self,unit);
+							}
+						}
+						afinally();			
+					};
+
+					//队列开始执行事件
+					if(_runCount == 0 && !_isStart){
+						_isStart = true;
+						runQueueEvent.call(self,'event_queue_begin',self);
+					}
+
+					var nextp = toPromise(function(){
+						return unit.fn.apply((_self || null),unit.regs)
+					}).then(issucc,iserr).then(function(){
+						if(_queue.length>0){
+							queueRun();
+						}else if(_runCount == 0 && _isStart){//队列结束执行事件
+							_isStart = false;
+							runQueueEvent.call(self,'event_queue_end',self);
+						}
+					});
+					_runCount += 1;
+					//nextp.then(defer.resolve,defer.reject)
+					if(timeout > 0){
+						xc_timeout = setTimeout(function(){
+							iserr("timeout")
+						},timeout)
+					}
+					//return;
+				//}
+				return;
+			}
+			return true;
+		}
+
+		function queueRun(){
+			while(!next()){}
+			// if(_isStop) return;
+			// do{
+			// 	next();
+			// }while(_queue.length && _runCount < _max)
+		}
+		/**队列控制**/
+		
+		//开始执行队列
+		this.start = function(){
+			_isStop = 0;
+			queueRun();
+		}
+
+		this.stop = function(){
+			//console.log('on stop')
+			_isStop = 1;
+		}
+		
+		//清空执行队列
+		this.clear = function(err){
+			while(_queue.length){
+				var unit = _queue.shift();
+				unit.defer.reject(err);
+			}
+		}
+	}
+
+	/**
+	 * 队列执行单类
+	 * @param {Function} fn  运行函数
+	 * @param {Array}    args 元行函数的参数,可省略
+	 * @param {Object}   options 其他配置
+	 */
+	function QueueUnit(fn, args, options){
+		var def = {
+			'event_item_resolve' : true
+			,'event_item_reject' : true
+			,'event_item_finally' : true
+			,'queue_event_onoff' : true
 			,'regs':[]
+			,'self':null
 		}
-		var options = [
-			'event_succ'
-			,'event_err'
-			,'retry'
-			,'retry_type'
-			,'run_queue_event'
-			,'timeout'
-			,'self'
-		] //
-		for(var i in def){
-			this[i] = def[i]
+		var oNames = [
+			'event_item_resolve'    //是否执行队列event_item_resolve事件
+			,'event_item_reject'    //是否执行队列event_item_reject事件
+			,'event_item_finally'   //是否执行队列event_item_finally事件
+			,'queue_event_onoff'    //队列事件开关
+			,'retry'                //重试次数
+			,'retry_type'           //重试模式
+			,'timeout'              //超时
+			,'self'                 //运行函数self
+		];
+		var oi = 1;
+		if(!utils.isFunction(fn)){
+			throw new TypeError("Queues only support function, '" + fn + "' is not function")
 		}
-		this.fun = args[0];
-		var regs = args[1];
-		if(regs instanceof Array){
-			this.regs = regs;
+		this.fn = fn;
+		this._errNo = 0;
+		this.defer = _Promise.defer();
+		if(utils.isArray(args)){
+			this.regs = args;
+			oi++;
 		}
-		var configObj = args.length > 1 ? args[args.length-1] : false;
-		if(!!configObj && typeof configObj == "object" && !(configObj instanceof Array)){
-			for(i in options){
-				var attname = options[i]
-				if(typeof configObj[attname] != 'undefined'){
-					this[attname] = configObj[attname]
+
+		function inOptions(name){
+			for(var i = 0; i<oNames.length; i++){
+				if(name === oNames[i]) return true;
+			}
+			return false;
+		}
+
+		this._options = def;
+		var configObj = arguments[oi];
+		//console.log(configObj);
+		if(utils.isObject(configObj)){
+			for(var i in configObj){
+				if(inOptions(i)){
+					def[i] = configObj[i];
 				}
 			}
 		}
-		this.defer = _Promise.defer();
 	}
 
 	function getOption(name,qobj,queue){
-		var _vq = qobj[name];
-		return typeof _vq !== "undefined" ? _vq : queue._option[name];
+		if(name in qobj._options){
+			return qobj._options[name];
+		}else{
+			return queue._options[name];
+		}
 	}
 
 	function runEvent(event,queue,arg){
 		var o = queue;
-		if(event && typeof event == "function"){
+		if(utils.isFunction(event)){
 			try{
-				event.apply(o,arg)
+				return event.apply(o,arg)
 			}catch(e){
-				if(typeof queue.onError == "function"){
-					queue.onError(e)
-				}
+				onError.call(o,e);
 			}
+		}else{
+			return !!event;
 		}
 	}
-	function runQueueEvent(eventName){
-		var event = this._option[eventName]
-			,arg = Array.prototype.slice.call(arguments,1);
-		runEvent.call(null,event,this,arg);
-	}
-	function runQueueobjEvent(eventName,queue){
-		var event = this[eventName]
-			,arg = Array.prototype.slice.call(arguments,2);
-		//console.log(this,eventName,queue)
-		runEvent.call(null,event,queue,arg);
-	};
-	function runAddEvent(aObbj){runQueueEvent.call(this,'event_add',aObbj,this);}
 
-	//构建执行对象
-	function toObj(fun){
-		if(fun instanceof Queueobj){
-			return fun;
-		}else if(typeof fun == 'function'){
-			return new Queueobj(Array.prototype.slice.call(arguments))
-		}else{
-			throw new TypeError("Queues only support function, '" + fun + "' is not function")
+	function runQueueEvent(eventName){
+		var event = this._options[eventName]
+			,arg = utils.arg2arr(arguments,1);
+		return runEvent.call(null,event,this,arg);
+	}
+	function runQueueUnitEvent(eventName,queue){
+		var event = this._options[eventName]
+			,arg = utils.arg2arr(arguments,2);
+		return runEvent.call(null,event,queue,arg);
+	};
+	function runAddEvent(aObbj){runQueueEvent.call(this,'event_queue_add',aObbj,this);}
+
+	//构建执行单元对象
+	function getQueueUnit(fn,args,options){
+		// try{
+			return new QueueUnit(fn,args,options);
+		// }catch(e){
+		// 	if(utils.isFunction(this.onError)){
+		// 		this.onError(e)
+		// 	}
+		// }
+	}
+
+	function onError(err){
+		if(utils.isFunction(this.onError)){
+			this.onError.call(this,err)
 		}
 	}
 
@@ -151,107 +346,35 @@ module.exports = function(Promise){
 		//获取/设置配置
 		option: function(name){
 			if(arguments.length == 1){
-				return this._option[name];
+				return this._options[name];
 			}else if(arguments.length > 1){
-				this._option[name] = arguments[1]
+				this._options[name] = arguments[1]
 			}
 		}
-		//执行下一项
-		,next : function(){
-			var o = this;
-			if(this.ing < this.max && !this.isStop){
-				var _Obj = this.lins.shift()
-				if(_Obj){
-					var Qevent = _Obj.run_queue_event
-					var xc_timeout
-						,_mark=0
-					var timeout = getOption('timeout',_Obj,o)
-						,retryNo = getOption('retry',_Obj,o)
-						,retryType = getOption('retry_type',_Obj,o)
-					//	,_mark1;
-					var fin = function(){
-						if(xc_timeout) clearTimeout(xc_timeout)
-						xc_timeout = 0;
-						if(_mark++) return true;
-						o.ing--;
-					}
-					var issucc = function(data){
-						if(fin()) return;
-						if(_Obj.defer) _Obj.defer.resolve(data);  //通知执行单元,成功
-						runQueueobjEvent.call(_Obj,'event_succ',o,data,o,_Obj);
-						Qevent && runQueueEvent.call(o,'event_succ',data,o,_Obj);
-					}
-					var iserr = function(err){
-						//if(err == 'timeout') _mark1 =1;
-						if(fin()) return;
-						_Obj.errNo++;
-						if(retryNo > _Obj.errNo-1){
-							if(retryType) o.jump(_Obj)
-							else o.go(_Obj);
-						}else{
-							if(_Obj.defer) _Obj.defer.reject(err);  //通知执行单元,失败
-							runQueueobjEvent.call(_Obj,'event_err',o,err,o,_Obj);
-							Qevent && runQueueEvent.call(o,'event_err',err,o,_Obj);
-						}					
-					};
-					var nextp = toPromise(function(){
-						return _Obj.fun.apply(_Obj.self || null,_Obj.regs)
-					}).then(issucc,iserr).then(function(){
-						o.isStop || o.start();
-					});
-					o.ing += 1;
-					//nextp.then(defer.resolve,defer.reject)
-					if(typeof _Obj.timeout !== "undefined" || o._option.timeout > 0){
-						var timeout = o._option.timeout;
-						timeout = typeof _Obj.timeout !== "undefined" ? +_Obj.timeout : timeout;
-						if(timeout > 0){
-							xc_timeout = setTimeout(function(){
-								iserr("timeout")
-							},timeout)
-						}
-					}
-				}
-
-				if(_Obj && !o.isStart){
-					o.isStart = 1;
-					runQueueEvent.call(o,'event_begin',o);
-				}
-
-				if(!_Obj && o.ing === 0 && o.isStart){
-					o.isStart = 0;
-					runQueueEvent.call(o,'event_end',o);
-				}
-			}
-		}
+		
 		//向队列尾部增加执行项,若队列未启动，暂时不会被执行
 		,'push' : function(){ 
-			var o = this , aObbj = toObj.apply(0,arguments);
-			o.lins.push(aObbj)
-			runAddEvent.call(o,aObbj)
-			return aObbj.defer.promise;
+			var o = this , unit = getQueueUnit.apply(o,arguments);
+			o._addItem(unit,false);
+			return unit.defer.promise;
 		}
 		//向队列头部增加执行项,若队列未启动，暂时不会被执行
 		,'unshift': function(){
-			var o = this , aObbj = toObj.apply(0,arguments);
-			o.lins.unshift(aObbj)
-			runAddEvent.call(o,aObbj)
-			return aObbj.defer.promise;
+			var o = this , unit = getQueueUnit.apply(o,arguments);
+			o._addItem(unit,true);
+			return unit.defer.promise;
 		}
 		//添加执行项，并会启动队列
-		,go: function(fun){
-			var o = this , aObbj = toObj.apply(0,arguments);
-			o.lins.push(aObbj)
-			runAddEvent.call(o,aObbj)
-			o.start();
-			return aObbj.defer.promise;
+		,go: function(){
+			var o = this , unit = getQueueUnit.apply(o,arguments);
+			o._addItem(unit,false,true);
+			return unit.defer.promise;
 		}
 		//在队列头部插入并执行项
-		,jump: function(fun){
-			var o = this , aObbj = toObj.apply(0,arguments);
-			o.lins.unshift(aObbj)
-			runAddEvent.call(o,aObbj)
-			o.start();
-			return aObbj.defer.promise;
+		,jump: function(){
+			var o = this , unit = getQueueUnit.apply(o,arguments);
+			o._addItem(unit,true,true);
+			return unit.defer.promise;
 		}
 		//插入数组处理
 		,all: function(arr,start,jump){
@@ -260,8 +383,8 @@ module.exports = function(Promise){
 			for(var i = 0;i<arr.length;i++){
 				+function(){
 					var _i = i;
-					var funobj = arr[_i];
-					var _p = jump ? o.unshift.apply(o,funobj) : o.push.apply(o,funobj);
+					var unitArgs = arr[_i];
+					var _p = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
 					parrs.push(_p);
 				}()
 			}
@@ -270,10 +393,10 @@ module.exports = function(Promise){
 			if(start) this.start();
 			return nextP.promise;
 		}
-		,'allLike': function(arr,fun,con){
+		,'allLike': function(arr,fn,con){
 			var parrs = [],baseN = 2,config,start,jump;
 			var o = this;
-			if(typeof con == "object"){
+			if(utils.isObject(con)){
 				config = con;
 				baseN++;
 			}else{
@@ -284,8 +407,8 @@ module.exports = function(Promise){
 			for(var i=0;i<arr.length;i++){
 				+function(){
 					var _i = i;
-					var rges = Array.prototype.concat.call([],arr[_i])
-					var _p = jump ? o.unshift(fun,rges,con) : o.push(fun,rges,con);
+					var rges = [].concat([arr[_i]],[_i],[arr])
+					var _p = jump ? o.unshift(fn,rges,con) : o.push(fn,rges,con);
 					parrs.push(_p);
 				}()
 			}
@@ -294,10 +417,10 @@ module.exports = function(Promise){
 			if(start) this.start();
 			return nextP.promise;
 		}
-		,'allEach': function(arr,fun,con){
+		,'allEach': function(arr,fn,con){
 			var parrs = [],baseN = 2,config,start,jump;
 			var o = this;
-			if(typeof con == "object"){
+			if(utils.isObject(con)){
 				config = con;
 				baseN++;
 			}else{
@@ -308,8 +431,8 @@ module.exports = function(Promise){
 			for(var i in arr){
 				+function(){
 					var _i = i;
-					var rges = Array.prototype.concat.call([],arr[_i],_i,arr)
-					var _p = jump ? o.unshift(fun,rges,con) : o.push(fun,rges,con);
+					var rges = [].concat([arr[_i]],[_i],[arr])
+					var _p = jump ? o.unshift(fn,rges,con) : o.push(fn,rges,con);
 					parrs.push(_p);
 				}()
 			}
@@ -318,10 +441,10 @@ module.exports = function(Promise){
 			if(start) this.start();
 			return nextP.promise;
 		}
-		,'allMap': function(map,fun,con){
+		,'allMap': function(map,fn,con){
 			var parrs = {},baseN = 2,config,start,jump;
 			var o = this;
-			if(typeof con == "object"){
+			if(utils.isObject(con)){
 				config = con;
 				baseN++;
 			}else{
@@ -332,8 +455,8 @@ module.exports = function(Promise){
 			for(var i in map){
 				+function(){
 					var _i = i;
-					var rges = Array.prototype.concat.call([],map[_i],_i,map)
-					var _p = jump ? o.unshift(fun,rges,con) : o.push(fun,rges,con);
+					var rges = [].concat([map[_i]],[_i],[map])
+					var _p = jump ? o.unshift(fn,rges,con) : o.push(fn,rges,con);
 					parrs[_i] = _p;
 				}()
 			}
@@ -343,67 +466,58 @@ module.exports = function(Promise){
 			return nextP.promise;
 		}
 
-		/**队列控制**/
 		
-		//开始执行队列
-		,start: function(){
-			this.isStop = 0;
-			do{
-				this.next();
-			}while(this.lins.length && this.ing < this.max)
-		}
-		,stop: function(){
-			//console.log('on stop')
-			this.isStop = 1;
-		}
-		//修改并行单元数
-		,setMax: function(max){ //修改执行单元并行数
-			try{
-				max = (+max)>>0;
-				if(max > 0){
-					this.max = max;
-					if(!this.isStop && this.ing) this.start();
-				}else{
-					throw new Error('The "max" value is invalid')
-				}
-			}catch(e){
-				if(typeof this.onError == "function"){
-					this.onError(e)
-				}
-			}
-		}
-		//清空执行队列
-		,'clear': function(err){
-			//this.stop();
-			//console.log(this.lins);
-			while(this.lins.length){
-				var _Obj = this.lins.shift();
-				_Obj.defer.reject(err)
-			}
-			//运行装态下执行clear将触发 eve
-			// if(!this.isStop){
-
-			// }
-		}
 		/**事件**/
 		// //有执行项添加进执行单元后执行
-		// ,event_add: function(){}
+		// ,event_queue_add: function(){}
 		// //执行单元成功后
-		// ,event_succ: function(data){}
+		// ,event_item_resolve: function(data){}
 		// //执行单元失败
-		// ,event_err: function(err,obj){}
+		// ,event_item_reject: function(err,obj){}
 		// //队列开始执行
-		// ,event_begin: function(){}
+		// ,event_queue_begin: function(){}
 		// //队列运行结束执行
-		// ,event_end: function(){}
+		// ,event_queue_end: function(){}
 	};
+
 	Queue.prototype.allArray = Queue.prototype.allLike
 	
 	return Queue;
 };
-},{"extend-promise/src/extendClass":5}],3:[function(require,module,exports){
+},{"./utils":3,"extend-promise/src/extendClass":6}],3:[function(require,module,exports){
+'use strict';
+// exports.isPlainObject = function(obj) {
+// 	if (obj === null || typeof(obj) !== "object" || obj.nodeType || (obj === obj.window)) {
+// 		return false;
+// 	}
+// 	if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
+// 		return false;
+// 	}
+// 	return true;
+// }
+
+exports.isArray = function(obj){
+	return Object.prototype.toString.call(obj) == "[object Array]"
+}
+
+exports.isFunction = function(obj){
+	return typeof obj === "function"
+}
+
+exports.isObject = function(obj){
+	return typeof obj === "object" && obj !== null
+}
+
+// exports.isEmpty = function(obj){
+// 	return typeof obj == 'undefined' || obj === null;
+// }
+
+exports.arg2arr = function(arg,b,s){
+	return Array.prototype.slice.call(arg,b,s);
+}
+},{}],4:[function(require,module,exports){
 module.exports = require("./src")(function(fn){setTimeout(fn,0)});
-},{"./src":4}],4:[function(require,module,exports){
+},{"./src":5}],5:[function(require,module,exports){
 "use strict";
 module.exports = function(nextTick){
 	var FUN = function(){};
@@ -594,16 +708,15 @@ module.exports = function(nextTick){
 	}
 	return Promise_;
 }
-},{}],5:[function(require,module,exports){
-function isPlainObject(obj) {
-	if (obj === null || typeof(obj) !== "object" || obj.nodeType || (obj === obj.window)) {
-		return false;
-	}
-	if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
-		return false;
-	}
-	return true;
-}
+},{}],6:[function(require,module,exports){
+'use strict';
+var utils = require('./utils')
+var isArray = utils.isArray
+	,isEmpty = utils.isEmpty
+	,isFunction = utils.isFunction
+	,isPlainObject = utils.isPlainObject
+	,arg2arr = utils.arg2arr
+
 function extendClass(Promise,obj,funnames){
 	var QClass,source;
 	if(obj){
@@ -614,7 +727,7 @@ function extendClass(Promise,obj,funnames){
 	}
 
 	function asbind(name){
-		if(Object.prototype.toString(funnames) == "[Objece Array]"){
+		if(isArray(funnames)){
 			var nomark = false;
 			for(var i = 0; i<funnames.length; i++){
 				if(funnames[i] == name){
@@ -625,7 +738,7 @@ function extendClass(Promise,obj,funnames){
 			if(!nomark) return false;
 		}
 		if(source){
-			return typeof QClass[name] !== 'function';
+			return !isFunction(QClass[name]);
 		}
 		return true;
 	}
@@ -633,11 +746,7 @@ function extendClass(Promise,obj,funnames){
 	if(!QClass.Promise && Promise != obj) QClass.Promise = Promise;
 
 	//defer
-	if(typeof Promise.defer == "function"){
-		QClass.defer = Promise.defer
-	}else if(typeof Promise.deferred == "function"){
-		QClass.defer = Promise.deferred
-	}else{
+	if(isFunction(Promise.prototype.then)){
 		QClass.defer = function() {
 			var resolve, reject;
 			var promise = new Promise(function(_resolve, _reject) {
@@ -650,13 +759,21 @@ function extendClass(Promise,obj,funnames){
 				reject: reject
 			};
 		}
+	}else if(isFunction(Promise.defer)){
+		QClass.defer = function(){return Promise.defer();}
+	}else if(isFunction(Promise.deferred)){
+		QClass.defer = function(){return Promise.deferred();}
+	}else{
+		throw new TypeError("此类不支持扩展!")
 	}
 
 	//delay
 	if(asbind("delay")){
 		QClass.delay = function(ms,value){
 			var defer = QClass.defer();
-			setTimeout(defer.resolve,ms,value)
+			setTimeout(function(){
+				defer.resolve(value);
+			},ms)
 			return defer.promise;
 		}
 	}
@@ -680,7 +797,7 @@ function extendClass(Promise,obj,funnames){
 	}
 
 	function getall(map,count){
-		if(typeof count != 'undefined' && count != null){
+		if(!isEmpty(count)){
 			count = +count > 0 ? +count : 0; 
 		}
 		return function(promises) {
@@ -694,7 +811,7 @@ function extendClass(Promise,obj,funnames){
 						defer.resolve(data);
 					}
 				}, function(err) {
-					if (typeof count == "undefined") {
+					if (isEmpty(count)) {
 						defer.reject(err);
 					}else if(--_tempI == 0){
 						defer.resolve(data);
@@ -702,7 +819,7 @@ function extendClass(Promise,obj,funnames){
 				})
 				_tempI++;
 			}
-			if(Object.prototype.toString.call(promises) === '[object Array]'){
+			if(isArray(promises)){
 				data = [];
 				for(var i = 0; i<promises.length; i++){
 					fillData(i);
@@ -713,7 +830,7 @@ function extendClass(Promise,obj,funnames){
 					fillData(i);
 				}
 			}else{
-				defer.reject(new TypeError());
+				defer.reject(new TypeError("参数错误"));
 			}
 			return defer.promise;
 		}
@@ -815,7 +932,7 @@ function extendClass(Promise,obj,funnames){
 	function nfcall(f){
 		var _this = this === QClass ? null : this;
 		var defer = QClass.defer();
-		var argsArray = Array.prototype.slice.call(arguments,1)
+		var argsArray = arg2arr(arguments,1)
 		argsArray.push(cbAdapter(defer))
 		f.apply(_this,argsArray)
 	}
@@ -829,11 +946,11 @@ function extendClass(Promise,obj,funnames){
 		QClass.nfapply = function(f,args){
 			var _this = this === QClass ? null : this;
 			var defer = QClass.defer();
-			if(Object.prototype.toString.call(args) === '[object Array]'){
+			if(isArray(args)){
 				args.push(cbAdapter(defer));
 				f.apply(_this,args)
 			}else{
-				throw "args TypeError"
+				throw TypeError('"args" is not Array')
 			}
 			return defer.promise;
 		}
@@ -842,10 +959,37 @@ function extendClass(Promise,obj,funnames){
 	QClass.denodeify = function(f){
 		var _this = this === QClass ? null : this;
 		return function(){
-			return nfcall.call(_this,f,Array.prototype.slice.call(arguments))
+			return nfcall.call(_this,f,arg2arr(arguments))
 		}
 	}
 	return QClass;
 }
 module.exports = extendClass;
+},{"./utils":7}],7:[function(require,module,exports){
+'use strict';
+exports.isPlainObject = function(obj) {
+	if (obj === null || typeof(obj) !== "object" || obj.nodeType || (obj === obj.window)) {
+		return false;
+	}
+	if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
+		return false;
+	}
+	return true;
+}
+
+exports.isArray = function(obj){
+	return Object.prototype.toString.call(obj) == "[object Array]"
+}
+
+exports.isFunction = function(obj){
+	return typeof obj == "function"
+}
+
+exports.isEmpty = function(obj){
+	return typeof obj == 'undefined' || obj === null;
+}
+
+exports.arg2arr = function(arg,b,s){
+	return Array.prototype.slice.call(arg,b,s);
+}
 },{}]},{},[1])

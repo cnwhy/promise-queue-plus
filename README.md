@@ -1,4 +1,4 @@
-# queue-fun
+# queue-fun  
 [![NPM version][npm-image]][npm-url]
 [![npm download][download-image]][npm-url]
 [![Test coverage][coveralls-image]][coveralls-url]
@@ -11,7 +11,7 @@
 [coveralls-url]: https://coveralls.io/r/cnwhy/queue-fun?branch=master
 [BuildStatus-url]: https://travis-ci.org/cnwhy/queue-fun
 [BuildStatus-image]: https://travis-ci.org/cnwhy/queue-fun.svg
-queue-fun 是基于Promise的 运行队列控制类。
+queue-fun 是基于Promise的持续队列。
 
 ## 使用场景
 - 巨量同逻辑业务平稳处理
@@ -49,10 +49,10 @@ queue1.push(function(){return 2;}) //插入普通方法会按Promises/A+规则�
 queue1.unshift(testfun,[0]) //插入优先执行项 (后进先出)
 .then(console.log);
 
-queue1.allArray([3,4],testfun,{'event_succ':log}) //插入多个运行项 array,完成一项,将执行一次log方法
+queue1.allArray([3,4],testfun,{'event_item_resolve':log}) //插入多个运行项 array,完成一项,将执行一次log
 .then(console.log) 
 
-queue1.allMap({'a':5,'b':6,'c':7},testfun,{'event_succ':log}) //插入多个运行项 map , 最后的promise值也是一个对应map
+queue1.allMap({'a':5,'b':6,'c':7},testfun,{'event_item_resolve':log}) //插入多个运行项 map , 最后的promise值也是一个对应map
 .then(console.log)
 
 //queue1.start(); //执行队列
@@ -80,6 +80,7 @@ go
 ```
 
 ## API 
+V0.x [请看这里](https://github.com/cnwhy/queue-fun/wiki/V0.x-%E6%96%87%E6%A1%A3)  
 ### QueueFun
 #### new QueueFun(runMax,*options*) 实例化队列
 - runMax 并行运行队列方法的最大个数
@@ -87,20 +88,22 @@ go
 ```js
 var QueueFun = require("queue-fun");
 var queue = new QueueFun(10,{
-        "event_succ":function(value,queue){}    //成功
-        ,"event_err":function(err,queue){}      //失败
-        ,"event_begin":function(queue){}        //队列开始
-        ,"event_end":function(queue){}          //队列完成
-        ,"event_add":function(runObj,queue){}   //有执行项添加进执行单元后执行
-        ,"retry":0                              //单元出错重试次数
-        ,"retry_type":false                     //重试模式 false:搁置,true:优先 
-        ,"timeout":0                            //执行单元的超时时间(毫秒)
+        "event_queue_begin":function(queue){}         //队列开始
+        ,"event_queue_end":function(queue){}          //队列完成
+        ,"event_queue_add":function(item,queue){}     //有执行项添加到队列后执行
+        ,"event_item_resolve":function(value,queue){} //执行单元resolve后执行
+        ,"event_item_reject":function(err,queue){}    //执行单元reject后执行
+        ,"event_item_finally":function(queue){}    //执行单元reject后执行
+        ,"retry":0                                    //执行单元出错重试次数
+        ,"retry_type":false                           //重试模式 false:搁置,true:优先 
+        ,"timeout":0                                  //执行单元的超时时间(毫秒)
     })
 ```
 
 #### QueueFun.setPromise(Promise) 
-切换内部使用的Promise , v1.X 默认使用的是 [bluebird][github-bluebird]  如有必要可以切换为其他Promise实现类如 **[q][github-q] / 原生Promise** 其实现了`defer`,`then`的promise的类都可以.  
-设置此项将影响插入队列方法: `push` `unshift` `go` `jump` 等返回对应的promise实例.
+切换内部使用的Promise , v1.X 默认使用的是 [bluebird][github-bluebird]  
+如有必要可以切换为其他Promise实现类如 **[q][github-q] / 原生Promise** 其实现了`defer`,`then`的promise的类都可以.
+设置此项将影响插入队列方法: `push` `unshift` `go` `jump` 等返回的promise实例.  
 
 ```javascript
 var Queue = require("queue-fun") //默认内部使用bluebird

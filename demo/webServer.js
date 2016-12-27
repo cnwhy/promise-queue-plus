@@ -6,17 +6,17 @@ var app = express();
 var sp = 500;
 
 var queue = new QueueFun(1,{
-	'event_add' : setBusy
-	,'event_succ' : setBusy
-	,'event_err' : setBusy
+	'event_queue_add' : setBusy
+	,'event_item_finally': setBusy
 })
 
 var isBusy = false
 function setBusy(){
-	if(this.lins.length > 5){
+	var queueLength = this.getQueueLength();
+	if(queueLength > 5){
 		isBusy = true;
 	}
-	if(this.lins.length < 2){
+	if(queueLength < 2){
 		isBusy = false;
 	}
 }

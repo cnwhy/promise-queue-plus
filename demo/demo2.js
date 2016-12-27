@@ -2,21 +2,24 @@ var Queue = require('../');
 var q = Queue.Q; //内置的Promise，仿Q的API
 
 //定义一些方法
-function event_succ(data,obj){
-	console.log('第' + data + '事件完成 - 运行中事件数：' + this.ing + ' - 剩余：' + this.lins.length)
+function event_item_resolve(data,obj){
+	console.log('第' + data + '事件完成 - 运行中事件数：' + this.getRunCount() + ' - 剩余：' + this.getQueueLength())
 }
-function event_err(err,obj){
-	console.log('queue-err:',err)
+function event_item_reject(err,obj){
+	console.log('一个执行单元状态拒绝' + err)
 }
-function event_begin(){
+function event_queue_begin(){
 	console.log('>>>>>> 队列开始')
 }
-function event_end(){
+function event_queue_end(){
 	console.log('<<<<<< 队列结束了')
 }
-function event_add(){
-	console.log("向队列添加项",this.isStart,this.lins.length) 
-	if(!this.isStart && this.lins.length >= 10){ //当添加了10个项后,运行队列
+function event_item_finally(){
+	console.log('一个执行单元完成')
+}
+function event_queue_add(){
+	console.log("向队列添加项 ",this.isStart(),this.getQueueLength()) 
+	if(!this.isStart() && this.getQueueLength() >= 5){ //当添加了10个项后,运行队列
 		console.log(">> 触发自动运行条件")
 		this.start();
 	}
@@ -27,16 +30,16 @@ function event_add(){
 // q1.start();
 
 //new Queue([并行数],<options>) 并行数必须
-var queue1 = new Queue(1,{
-		"event_succ": event_succ
-		,"event_err": event_err
-		,"event_begin": event_begin
-		,"event_end": event_end	
-		,"retryON":0 //出错重试次数 默认0;
-		,'event_add':event_add //event_add只会在push/unshift方法添向项时才触发！
+var queue1 = new Queue(2,{
+		"event_item_resolve": event_item_resolve
+		,"event_item_reject": event_item_reject
+		,"event_item_finally": event_item_finally
+		,"event_queue_begin": event_queue_begin
+		,"event_queue_end": event_queue_end	
+		,"retry":0 //出错重试次数 默认0;
+		,'event_queue_add':event_queue_add //event_queue_add只会在push/unshift方法添向项时才触发！
 	})
 
-//一个Promise的异步方法
 function testfun(i){
 	var deferred = q.defer();
 	setTimeout(function(){
@@ -54,7 +57,6 @@ queue1.push(testfun,['Q1'])
 queue1.allArray([1,2,3,4,5],function(v,i,arr){
 	var deferred = q.defer();
 	setTimeout(function(){
-		console.log(v)
 		deferred.resolve(i+":"+v);
 	},500);
 	return deferred.promise;
@@ -66,19 +68,19 @@ setTimeout(function(){
 	//用go添加项 将会启动队列；
 	queue1.go(testfun,['Q2'])
 	//添加的项返回的是一个promise,所以可以在添加时就定义好“回调”
-	queue1.go(testfun,['Q3']).then(console.log,console.error)  //succ
-	queue1.go(testfun,['Qerr']).then(console.log,console.error)  //err
+	queue1.go(testfun,['Q3']).then(console.log,console.log)  //succ
+	queue1.go(testfun,['Qerr']).then(console.log,console.log)  //err
 	//也可以这样添加“回调”
 	var con = {
-		'event_succ':function(data){
+		'event_item_resolve':function(data){
 			console.log(data + '完成!')
 		}
-		,'event_err':function(err){
+		,'event_item_reject':function(err){
 			console.error(err)
 		}
 	}
 	queue1.go(testfun,['Q4'],con)
 	//标记此对象不会走队列的成功失败事件.
-	queue1.go(testfun,['Q5'],{Queue_event:0}).then(function(data){console.log(data + "不会触发队列初始化时定义的成功/失败方法")}) 
+	queue1.go(testfun,['Q5'],{run_queue_event:false}).then(function(data){console.log(data + "不会触发队列初始化时定义的成功/失败方法")}) 
 	
-},1000)
+},0)

@@ -43,7 +43,7 @@ gulp.task('pre-test', function () {
 
 gulp.task('test', ['pre-test'], function () {
   return gulp.src('test/mocha_*.js', {read: false})
-    .pipe(mocha({reporter: 'nyan'}))
+    .pipe(mocha({reporter: 'dot'}))
     // Creating the reports after tests ran 
     .pipe(istanbul.writeReports())
     // Enforce a coverage of at least 90% 

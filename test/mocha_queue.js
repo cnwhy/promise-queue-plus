@@ -19,6 +19,8 @@ function fun1(i,err){
 
 //异步函数
 function fun2(i,err){
+
+	if(this == null) console.log(i,err);
 	var deferred = Q.defer();
 	setTimeout(function(){
 		if(err){
@@ -29,6 +31,12 @@ function fun2(i,err){
 	},MAXTIME)
 	//},(Math.random() * MAXTIME)>>0)
 	return deferred.promise;
+}
+
+function fun3(v,i,arr){
+	//console.log(v);
+	return fun2.apply(null,[].concat(v));
+	//return fun2(v);
 }
 
 function ADD(queue,type,start){
@@ -71,7 +79,7 @@ function ADD(queue,type,start){
 		var arr = [];
 		succ && arr.push(i++);
 		err && arr.push([i++,"allLike err"]);
-		queue.allLike(arr,fun2).then(null,NULLFUN);
+		queue.allLike(arr,fun3).then(null,NULLFUN);
 	}
 	if(!type || ~ts.indexOf('allEach')){
 		var arr = [];
@@ -164,31 +172,108 @@ var addnoFun = function(queue,type){
 	return errs;
 }
 
+function testDescriby(event_name){
+	var td = {
+		"false" : {
+			value:false
+			,succ_value:false
+		} 
+		,"true" :{
+			value:true
+			,succ_value:true
+		} 
+		,"1":{
+			value:1
+			,succ_value:true
+		}
+		,"0":{
+			value:0
+			,succ_value:false
+		}
+		,"null":{
+			value:null
+			,succ_value:false
+		}
+		,"undefined":{
+			value:undefined
+			,succ_value:false
+		}
+		,"function > false" :{
+			value:function(){return false;}
+			,succ_value:false
+		} 
+		,"function > true" :{
+			value:function(){return true;}
+			,succ_value:true
+		}
+		,"function > undefined" :{
+			value:function(){}
+			,succ_value:true
+		} 
+		,"function > throw" :{
+			value:function(){throw "err";}
+			,succ_value:true
+		} 
+	}
+	for(var test in td){
+		+function(){
+			var ts = test
+			var t = td[ts];
+			it("进行" + event_name + "值为: " + ts + " 的测试",function(done){
+				testEvent(event_name,t.value,t.succ_value,done);
+			})
+		}()
+		//break;
+	}
+}
+
+function testEvent(event_name,event,succ_value,done){
+	var testData = {
+		"event_item_resolve": []
+		,"event_item_reject": []
+		,"event_item_finally": []
+	};
+	var arr = testData[event_name];
+	var dfon = {
+		"event_item_resolve": 'y'
+		,"event_item_reject": 'n'
+		,"event_item_finally": 'f'
+	}
+	var push = function(vname,i){
+		return function(k){
+			testData[vname] && testData[vname].push(i);
+		}
+	}
+	var q1 = new Queue(1,{
+		"event_item_resolve":push("event_item_resolve",'y')
+		,"event_item_reject":push("event_item_reject",'n')
+		,"event_item_finally":push("event_item_finally",'f')
+		,"event_queue_end":function(vv,Qobj){
+			// console.log(event_name,event,succ_value)
+			// console.log(arr)
+			// console.log(v)
+			if(succ_value){
+				if(arr.join("") != v) return done("逻辑错误!"+arr)
+			}else{
+				if(arr.join("") != "") return done("逻辑错误!"+arr)
+			}
+			done();
+		}
+	});
+	q1.onError = function(){}; 
+	var con = {},v;
+	con[event_name] = event;
+	v = dfon[event_name];
+	if(event_name == 'event_item_finally'){
+		v += v;	
+	}
+	q1.push(fun2,[9],con); //yf
+	q1.push(fun2,[9,9],con).then(null,NULLFUN); //nf
+	q1.start();
+}
+
 //普通测试
-describe('测试Queue-fun Queue 队列类', function(){
-  //   describe('使用非内置Promise', function(){
-		// it('#原生Promise', function(done){
-		// 	if(typeof Promise == "undefined") return done();
-		// 	var q1 = new (QueueFun(Promise))(1);
-		// 	var funOk = function(){done();}
-		// 	if(q1.option("event_end") != funOk){
-		// 		q1.option("event_end",funOk)
-		// 	}
-		// 	ADD(q1,"",1)
-		// })
-		// it('#Q 模块', function(done){
-		// 	var q1 = new (QueueFun(require('q')))(1);
-		// 	q1.option("event_end",function(){done();})
-		// 	ADD(q1,"",1)
-		// })
-		// it('#bluebird 模块', function(done){
-		// 	var q1 = new (QueueFun(require('bluebird')))(1);
-		// 	q1.option("event_end",function(){done();})
-		// 	ADD(q1,"",1)
-		// })
-  //   })
-  //   
- 
+describe('测试Queue-fun Queue 队列类', function(){ 
     describe('队列 插入，执行', function(){
 		describe('#单个添加测试', function(){
 			var q1 = new Queue(1)
@@ -206,11 +291,11 @@ describe('测试Queue-fun Queue 队列类', function(){
 				done();
 			})
 			it('.push(fun,args,con) OK', function(done){
-				q1.push(fun2,[1],{event_succ:succ(1,done)})
+				q1.push(fun2,[1],{event_item_resolve:succ(1,done)})
 				q1.start();
 			})
 			it('.push(fun,args,con) err', function(done){
-				q1.push(fun2,[1,2],{event_err:succ(2,done)}).then(null,NULLFUN)
+				q1.push(fun2,[1,2],{event_item_reject:succ(2,done)}).then(null,NULLFUN)
 				q1.start();
 			})
 			it('.push(fun,args)', function(done){
@@ -282,8 +367,8 @@ describe('测试Queue-fun Queue 队列类', function(){
 			var q2 = new Queue(3)
 			it('.push 多个', function(done){
 				var k = [],k1=[];
-				q1.option("event_end",endfun)
-				q2.option("event_end",endfun)
+				q1.option("event_queue_end",endfun)
+				q2.option("event_queue_end",endfun)
 				for(var i = 0; i<5; i++){
 					var _err = i===2 ? 2 : null;
 					q1.push(fun2,[i,_err]).then(function(data){
@@ -296,7 +381,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				q1.start();
 				q2.start();
 				function endfun(){
-					if(q1.isStart || q2.isStart) return;
+					if(q1.isStart() || q2.isStart()) return;
 					if(k.join('') !== '0134') return done("执行顺序错误" + k.join(''));
 					if(k1.join('') !== '0134') return done("多并发执行顺序错误" + k1.join(''));
 					done();
@@ -304,8 +389,8 @@ describe('测试Queue-fun Queue 队列类', function(){
 			})
 			it('.unshift 多个', function(done){
 				var k = [],k1=[];
-				q1.option("event_end",endfun)
-				q2.option("event_end",endfun)
+				q1.option("event_queue_end",endfun)
+				q2.option("event_queue_end",endfun)
 				for(var i = 0; i<5; i++){
 					var _err = i===2 ? 2 : null;
 					q1.unshift(fun2,[i,_err]).then(function(data){
@@ -318,7 +403,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				q1.start();
 				q2.start();
 				function endfun(){
-					if(q1.isStart || q2.isStart) return;
+					if(q1.isStart() || q2.isStart()) return;
 					if(k.join('') !== '4310') return done("执行顺序错误");
 					if(k1.join('') !== '4310') return done("多并发执行顺序错误");
 					done();
@@ -326,8 +411,8 @@ describe('测试Queue-fun Queue 队列类', function(){
 			})
 			it('.go 多个', function(done){
 				var k = [],k1=[];
-				q1.option("event_end",endfun)
-				q2.option("event_end",endfun)
+				q1.option("event_queue_end",endfun)
+				q2.option("event_queue_end",endfun)
 				for(var i = 0; i<5; i++){
 					var _err = i===2 ? 2 : null;
 					q1.go(fun2,[i,_err]).then(function(data){
@@ -338,7 +423,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 					},NULLFUN)
 				}
 				function endfun(){
-					if(q1.isStart || q2.isStart) return;
+					if(q1.isStart() || q2.isStart()) return;
 					if(k.join('') !== '0134') return done("执行顺序错误");
 					if(k1.join('') !== '0134') return done("多并发执行顺序错误");
 					done();
@@ -346,8 +431,8 @@ describe('测试Queue-fun Queue 队列类', function(){
 			})
 			it('.jump 多个', function(done){
 				var k = [],k1=[];
-				q1.option("event_end",endfun)
-				q2.option("event_end",endfun)
+				q1.option("event_queue_end",endfun)
+				q2.option("event_queue_end",endfun)
 				for(var i = 0; i<5; i++){
 					var _err = i===2 ? 2 : null;
 					q1.jump(fun2,[i,_err]).then(function(data){
@@ -358,9 +443,9 @@ describe('测试Queue-fun Queue 队列类', function(){
 					},NULLFUN)
 				}
 				function endfun(){
-					if(q1.isStart || q2.isStart) return;
+					if(q1.isStart() || q2.isStart()) return;
 					if(k.join('') !== '0431') return done("执行顺序错误");
-					if(k1.join('') !== '0143') return done("多并发执行顺序错误");
+					if(k1.join('') !== '0143') return done("多并发执行顺序错误" + k1.join(""));
 					done();
 				}
 			})
@@ -398,12 +483,12 @@ describe('测试Queue-fun Queue 队列类', function(){
 			it('.allLike([arg1,arg2],fun,con,start,jump) all ok', function(done){
 				var k = [],k1=[],jump;
 				var arr = [0,1,2]
-				q1.allLike(arr,fun2,1).then(function(data){
+				q1.allLike(arr,fun3,1).then(function(data){
 					if(data.join('') !== '012')return done("返回错误");
 					done();
 				},err(done))
 				q1.jump(fun2,[1]).then(function(){jump = 1;})
-				q1.allLike(arr,fun2,1,1).then(function(data){
+				q1.allLike(arr,fun3,1,1).then(function(data){
 					if(jump) return done("优先执行出错");
 					if(data.join('') !== '012') return done("返回错误");
 				},err(done))
@@ -411,7 +496,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 			it('.allLike([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
 				var k = [],k1=[];
 				var arr = [0,1,[2,2],3,4]
-				q2.allLike(arr,fun2,{},1).then(err(done),succ(2,done))
+				q2.allLike(arr,fun3,{},1).then(err(done),succ(2,done))
 			})
 			it('.allEach([arg1,arg2],fun,con,start,jump) all ok', function(done){
 				var k = [],k1=[],jump;
@@ -466,6 +551,49 @@ describe('测试Queue-fun Queue 队列类', function(){
 		})
     })
 	describe('队列方法测试', function(){
+		describe('#队列属性', function(){
+			var q1 = new Queue(1);
+			var fn = function(v){
+				return Q.delay(100,v)
+			}
+			it('.getMax()', function(done){
+				assert.equal(1, q1.getMax(), "初始错误")
+				q1.setMax(5);
+				assert.equal(5, q1.getMax(), "重新设置错误")
+				q1.setMax(1);
+				done();
+			});
+			it('.getQueueLength()', function(done){
+				assert.equal(0, q1.getQueueLength(), "初始错误")
+				q1.push(fn,[1]).then(null,NULLFUN);
+				assert.equal(1, q1.getQueueLength(), "实时值错误")
+				q1.allLike([1,2,3],fn).then(null,NULLFUN);
+				assert.equal(4, q1.getQueueLength(), "实时值错误")
+				q1.clear("clear");
+				done();
+			});
+			it('.getRunCount()', function(done){
+				assert.equal(0, q1.getRunCount(), "初始错误")
+				var p1 = q1.go(fn,[1]).then(null,NULLFUN);
+				var p2 = q1.go(fn,[2]).then(null,NULLFUN);
+				var p3 = q1.go(fn,[3]).then(null,NULLFUN);
+				assert.equal(1, q1.getRunCount(), "实时值错误")
+				q1.setMax(3);
+				assert.equal(3, q1.getRunCount(), "实时值错误")
+				Q.all([p1,p2,p3]).then(function(){
+					done();
+				})
+			});
+			it('.isStart()', function(done){
+				var q2 = new Queue(1);
+				assert.equal(false, q2.isStart(), "初始错误")
+				q2.go(fn,[1]).then(null,NULLFUN).then(function(v){
+					done(assert.equal(false, q2.isStart(), "实时值错误"));
+				});
+				assert.equal(true, q2.isStart(), "实时值错误")
+			});
+		})
+
 		describe('#队列控制测试', function(){
 			var q1 = new Queue(1)
 			it('.start()', function(done){
@@ -488,7 +616,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 					//console.log(k)
 					if(k.join('') !== "0") return done("暂停失败！")
 					q1.start();
-					q1.option("event_end",function(){
+					q1.option("event_queue_end",function(){
 						if(k.join('') !== "01234") return done("恢复执行出现问题！")
 						done();
 					})
@@ -496,7 +624,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 			})
 			it('.clear()', function(done){
 				var k =  [],ke = [];
-				q1.option("event_end",null);
+				q1.option("event_queue_end",null);
 				for(var i = 0; i < 5; i++ ){
 					q1.push(fun2,[i]).then(function(data){
 						k.push(data)
@@ -539,85 +667,123 @@ describe('测试Queue-fun Queue 队列类', function(){
 		})
 		describe('#队列事件测试', function(){
 			// var q1 = new Queue(1,{
-			// 	"event_succ":function(){console.log(this,arguments)}  //成功
-			// 	,"event_err":function(){}  //失败
-			// 	,"event_begin":function(){}  //队列开始
-			// 	,"event_end":function(){}    //队列完成
+			// 	"event_item_resolve":function(){console.log(this,arguments)}  //成功
+			// 	,"event_item_reject":function(){}  //失败
+			// 	,"event_queue_begin":function(){}  //队列开始
+			// 	,"event_queue_end":function(){}    //队列完成
 			// 	,"event_add":function(){}    //有执行项添加进执行单元后执行
 			// })
 			it('#事件顺序测试', function(done){
-				var q1 = new Queue(1);
+				var add1 = 0;
+				var finally1 = 0;
 				var arr = [];
-				q1.option("event_begin",function(v,Qobj){
-					arr.push(1)
-				})
-				q1.option("event_end",function(v,Qobj){
-					arr.push(4)
-					if(arr.join("") != "122334") done("顺序错误!")
-					else done();
-				})
-				q1.option("event_succ",function(v,Qobj){
-					arr.push(2)
-				})
-				q1.option("event_err",function(err,Qobj){
-					arr.push(3)
-				})
-				q1.push(function(){return 1});
-				ADD(q1,"push")
-				q1.push(function(){throw 1}).then(null,NULLFUN);
-				q1.start();
-			})
-
-			it('#队列事件出错捕获 , onError', function(done){
-				var errnb = {};
-				var throwfun = function(err){
+				var push = function(i){
 					return function(){
-						throw err;
+						arr.push(i);
 					}
 				}
 				var q1 = new Queue(1,{
-					event_begin:throwfun("event_begin")
-					,event_end:throwfun("event_end")
-					,event_succ:throwfun("event_succ")
-					,event_err:throwfun("event_err")
+					"event_queue_add":function(){add1++;}
+					,"event_queue_begin":push("b")
+					,"event_queue_end":function(v,Qobj){
+						push("e")();
+						//console.log(arr.join(""));
+						if(arr.join("") != "b1yf2nfy3fn4fyfnfe") return done("顺序错误!")
+						done();
+					}
+					,"event_item_resolve":push("y")
+					,"event_item_reject":push("n")
+					,"event_item_finally":push("f")
 				});
-				q1.onError = function(err){
-					if(errnb[err]){
-						errnb[err] += 1
-					}else{
-						errnb[err] = 1;
-					}
-					if(err == "event_end"){
-						if(errnb["event_begin"] == 1
-							&& errnb["event_end"] == 1
-							&& errnb["event_err"] == 2
-							&& errnb["event_succ"] == 2){
-							done()
-						}else{
-							done("onError 运行错误")
-						}
-					}
-				}
-				q1.push(function(){return 1});
-				ADD(q1,"push")
-				q1.push(function(){throw 1}).then(null,NULLFUN)
+
+				q1.push(function(){return 1},[1],{
+					event_item_resolve:function(){push(1)()}
+				});
+				q1.push(function(){throw 1},{
+					event_item_reject:function(){push(2)()}
+				}).then(null,NULLFUN);
+				q1.push(function(){return 1},{
+					event_item_finally:function(){push(3)()}
+				});
+				q1.push(function(){throw 1},{
+					event_item_finally:function(){push(4)()}
+				}).then(null,NULLFUN);
+
+				q1.push(fun2,[9]);
+				q1.push(fun2,[9,9]).then(null,NULLFUN);
+				
 				q1.start();
 			})
-
-			it('#event_succ , event_err 事件', function(done){
-				var q1 = new Queue(1)
-				q1.option("event_succ",function(v,Qobj){
-					if(typeof v != 'number') return done("event_succ 反回错误！")
-				})
-				q1.option("event_err",function(err,Qobj){
-					if(!/\serr$/.test(err)) return done("event_err 反回错误！")
-				})
-				q1.option("event_end",function(){
+			describe('#onError 事件', function(){
+				it('#默认不抛错', function(done){
+					var throwfun = function(err){
+						return function(){
+							throw err;
+						}
+					}
+					var q1 = new Queue(1,{
+						event_queue_add:throwfun("event_queue_add")
+					});
+					q1.push(function(){});
 					done();
-				})	
-				ADD(q1).start();
+				})
+				
+				it('#自定义onError 不为Function', function(done){
+					var throwfun = function(err){
+						return function(){
+							throw err;
+						}
+					}
+					var q1 = new Queue(1,{
+						event_queue_add:throwfun("event_queue_add")
+					});
+					q1.onError = {};
+					q1.push(function(){});
+					done();
+				})
+
+				it('#队列事件出错捕获 , 自定义onError', function(done){
+					var errnb = {};
+					var throwfun = function(err){
+						return function(){
+							throw err;
+						}
+					}
+					var q1 = new Queue(1,{
+						event_queue_begin:throwfun("event_queue_begin")
+						,event_queue_end:throwfun("event_queue_end")
+						,event_item_resolve:throwfun("event_item_resolve")
+						,event_item_reject:throwfun("event_item_reject")
+					});
+					q1.onError = function(err){
+						if(errnb[err]){
+							errnb[err] += 1
+						}else{
+							errnb[err] = 1;
+						}
+						if(err == "event_queue_end"){
+							if(errnb["event_queue_begin"] == 1
+								&& errnb["event_queue_end"] == 1
+								&& errnb["event_item_reject"] == 2
+								&& errnb["event_item_resolve"] == 2){
+								done()
+							}else{
+								done("onError 运行错误")
+							}
+						}
+					}
+					q1.push(function(){return 1});
+					ADD(q1,"push")
+					q1.push(function(){throw 1}).then(null,NULLFUN)
+					q1.start();
+				})
 			})
 
+			describe('#队列事件逻辑测试', function(){
+				testDescriby("event_item_resolve");
+				testDescriby("event_item_reject");
+				testDescriby("event_item_finally");
+			})
 
 
 		})
@@ -626,10 +792,11 @@ describe('测试Queue-fun Queue 队列类', function(){
 				var q1 = new Queue(2,{
 					"retry":0
 					,"retry_type":0               //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
+					,'_test':0
 				});
 				if(q1.option("retry") == 0) q1.option("retry",5);
 				var rnumb = 0,rnumb1 = 0;
-				q1.option("event_end",function(){
+				q1.option("event_queue_end",function(){
 					if(rnumb == 0 || rnumb1 == 0) return done("未重试")
 					if(rnumb !== 5 || rnumb1 !== 5) return done("重试次数错误！")
 					done();
@@ -672,6 +839,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				var qobj = {
 					"retry":3
 					,"retry_type":0 //重试模式
+					,"_test":1
 				}
 				var rnumb = 0,rnumb1 = 0;
 				q1.go(function(){
