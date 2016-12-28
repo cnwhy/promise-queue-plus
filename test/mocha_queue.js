@@ -33,10 +33,13 @@ function fun2(i,err){
 	return deferred.promise;
 }
 
-function fun3(v,i,arr){
-	//console.log(v);
-	return fun2.apply(null,[].concat(v));
-	//return fun2(v);
+function fun3(){
+	return fun2.apply(null,arguments)
+}
+
+function fun4(v,i,all){
+	if(all[i] !== v) throw ("执行参数错误!");
+	return fun2.apply(null,[].concat(v))
 }
 
 function ADD(queue,type,start){
@@ -69,35 +72,35 @@ function ADD(queue,type,start){
 			err && queue.jump(fun2,[i++,"jump err"]).then(null,NULLFUN);
 		}
 	}
-	if(!type || ~ts.indexOf('all')){
+	if(!type || ~ts.indexOf('addArray')){
 		var arr = [];
 		succ && arr.push([fun2,[i++]]);
-		err && arr.push([fun2,[i++,"all err"]]);
-		queue.all(arr).then(null,NULLFUN);
+		err && arr.push([fun2,[i++,"addArray err"]]);
+		queue.addArray(arr).then(null,NULLFUN);
 	}
-	if(!type || ~ts.indexOf('allLike')){
+	if(!type || ~ts.indexOf('addLikeArray')){
 		var arr = [];
 		succ && arr.push(i++);
-		err && arr.push([i++,"allLike err"]);
-		queue.allLike(arr,fun3).then(null,NULLFUN);
+		err && arr.push([i++,"addLikeArray err"]);
+		queue.addLikeArray(arr,fun3).then(null,NULLFUN);
 	}
-	if(!type || ~ts.indexOf('allEach')){
+	if(!type || ~ts.indexOf('addLikeArrayEach')){
 		var arr = [];
 		succ && arr.push(i++);
-		err && arr.push([i++,"allEach err"]);
+		err && arr.push([i++,"addLikeArrayEach err"]);
 		var fun_temp = function(v,i,arr){
 			return fun2.apply(null,[].concat(v));
 		}
-		queue.allEach(arr,fun_temp)
+		queue.addLikePropsEach(arr,fun_temp)
 	}
-	if(!type || ~ts.indexOf('allMap')){
+	if(!type || ~ts.indexOf('addLikePropsEach')){
 		var map = {};
 		succ && (map.a = i++);
-		err && (map.b = [i++,"allMap err"]);
+		err && (map.b = [i++,"addLikePropsEach err"]);
 		var fun_temp = function(v,k,map){
 			return fun2.apply(null,[].concat(v));
 		}
-		queue.allMap(map,fun_temp)
+		queue.addLikePropsEach(map,fun_temp)
 	}
 	return queue;
 }
@@ -454,99 +457,129 @@ describe('测试Queue-fun Queue 队列类', function(){
 		describe('#批量添加测试', function(){
 			var q1 = new Queue(1)
 			var q2 = new Queue(3)
-			it('.all([[fun,arg,con]],start,jump) all ok', function(done){
+			it('.addArray([[fun,arg,con]],start,jump) all ok', function(done){
 				var k = [],k1=[],jump;
 				var arr = [
 					[fun2,[0]],
 					[fun2,[1]],
 					[fun2,[2]]
 				]
-				q1.all(arr,1).then(function(data){
+				q1.addArray(arr,1).then(function(data){
 					if(data.join('') !== '012') return done("返回错误");
 					done();
 				},err(done))
 				q1.jump(fun2,[1]).then(function(){jump = 1;})
-				q1.all(arr,1,1).then(function(data){
+				q1.addArray(arr,1,1).then(function(data){
 					if(jump) return done("优先执行出错");
 					if(data.join('') !== '012') return done("返回错误");
 				},err(done))
 			})
-			it('.all([[fun,arg,con]],start,jump) 2 > err', function(done){
+			it('.addArray([[fun,arg,con]],start,jump) 2 > err', function(done){
 				var k = [],k1=[];
 				var arr = [
 					[fun2,[0]],
 					[fun2,[1]],
 					[fun2,[2,2]]
 				]
-				q2.all(arr,1,1).then(err(done),succ(2,done))
+				q2.addArray(arr,1,1).then(err(done),succ(2,done))
 			})
-			it('.allLike([arg1,arg2],fun,con,start,jump) all ok', function(done){
+			it('.addProps(map,start,jump) all ok', function(done){
 				var k = [],k1=[],jump;
-				var arr = [0,1,2]
-				q1.allLike(arr,fun3,1).then(function(data){
+				var map = {
+					a:[fun2,[1]]
+					,b:[fun2,[2]]
+					,c:[fun2,[3]]
+				}
+				q1.addProps(map,1).then(function(data){
+					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
+					done();
+				},err(done))
+				q1.jump(fun2,[1]).then(function(){jump = 1;})
+				q1.addProps(map,1,1).then(function(data){
+					if(jump) return done("优先执行出错");
+					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
+				},err(done))
+			})
+			it('.addProps(map,start,jump) all err', function(done){
+				var k = [],k1=[],jump;
+				var map = {
+					a:[fun2,[1]]
+					,b:[fun2,[2,2]]
+					,c:[fun2,[3]]
+				}
+				q2.addProps(map,1,1).then(err(done),succ(2,done))
+			})
+			it('.addLikeArray([arg1,arg2],fun,con,start,jump) all ok', function(done){
+				var k = [],k1=[],jump;
+				var arr = [0,1,[2]]
+				q1.addLikeArray(arr,fun3,1).then(function(data){
 					if(data.join('') !== '012')return done("返回错误");
 					done();
 				},err(done))
 				q1.jump(fun2,[1]).then(function(){jump = 1;})
-				q1.allLike(arr,fun3,1,1).then(function(data){
+				q1.addLikeArray(arr,fun3,1,1).then(function(data){
 					if(jump) return done("优先执行出错");
 					if(data.join('') !== '012') return done("返回错误");
 				},err(done))
 			})
-			it('.allLike([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
+			it('.addLikeArray([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
 				var k = [],k1=[];
 				var arr = [0,1,[2,2],3,4]
-				q2.allLike(arr,fun3,{},1).then(err(done),succ(2,done))
+				q2.addLikeArray(arr,fun3,{},1).then(err(done),succ(2,done))
 			})
-			it('.allEach([arg1,arg2],fun,con,start,jump) all ok', function(done){
+			it('.addLikeArrayEach([arg1,arg2],fun,con,start,jump) all ok', function(done){
 				var k = [],k1=[],jump;
-				var arr = [0,1,2]
-				function fun_temp(v,i,arr){
-					return fun2(v);
-				}
-				q1.allEach(arr,fun_temp,{},1).then(function(data){
+				var arr = [0,1,[2]]
+				q1.addLikeArrayEach(arr,fun4,{},1).then(function(data){
 					if(data.join('') !== '012') return done("返回错误");
 					done();
 				},err(done));
 				q1.jump(fun2,[1]).then(function(){jump = 1;})
-				q1.allEach(arr,fun_temp,1,1).then(function(data){
+				q1.addLikeArrayEach(arr,fun4,1,1).then(function(data){
 					if(jump) return done("优先执行出错");
 					if(data.join('') !== '012') return done("返回错误");
 				},err(done))
 			})
-			it('.allEach([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
+			it('.addLikeArrayEach([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
 				var k = [],k1=[];
-				var arr = [0,1,2,3,4]
-				function fun_temp(v,i,arr){
-					var _err = v == 2 ? 2 : null;
-					return fun2(v,_err);
-				}
-				q2.allEach(arr,fun_temp,1).then(err(done),succ(2,done))
+				var arr = [0,1,[2,2],3,4]
+				q2.addLikeArrayEach(arr,fun4,1).then(err(done),succ(2,done))
 			})
-			it('.allMap(map,fun,con,start,jump) all > ok', function(done){
+			it('.addLikeProps(map,fun,con,start,jump) all > ok', function(done){
 				var k = [],k1=[],jump;
 				var map = {a:1,b:2,c:3}
-				function fun_temp(v,i,map){
-					return fun2(v);
-				}
-				q1.allMap(map,fun_temp,1).then(function(data){
+				q1.addLikeProps(map,fun3,1).then(function(data){
 					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
 					done();
 				},err(done))
 				q1.jump(fun2,[1]).then(function(){jump = 1;})
-				q1.allMap(map,fun_temp,1,1).then(function(data){
+				q1.addLikeProps(map,fun3,1,1).then(function(data){
 					if(jump) return done("优先执行出错");
 					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
 				},err(done))
 			})
-			it('.allMap(map,fun,con,start,jump) all > b > err', function(done){
+			it('.addLikeProps(map,fun,con,start,jump) all > b > err', function(done){
 				var k = [],k1=[];
+				var map = {a:1,b:[2,2],c:3}
+				q2.addLikeProps(map,fun3,{},1).then(err(done),succ(2,done))
+			})
+			it('.addLikePropsEach([arg1,arg2],fun,con,start,jump) all ok', function(done){
+				var k = [],k1=[],jump;
 				var map = {a:1,b:2,c:3}
-				function fun_temp(v,i,map){
-					var _err = v == 2 ? i : null;
-					return fun2(v,_err);
-				}
-				q2.allMap(map,fun_temp,{},1).then(err(done),succ('b',done))
+				q1.addLikePropsEach(map,fun4,1).then(function(data){
+					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
+					done();
+				},err(done))
+				q1.jump(fun2,[1]).then(function(){jump = 1;})
+				q1.addLikePropsEach(map,fun4,1,1).then(function(data){
+					if(jump) return done("优先执行出错");
+					if(data.a !== 1 || data.b !== 2 || data.c !== 3) return done("返回错误");
+				},err(done))
+			})
+			it('.addLikePropsEach([arg1,arg2],fun,con,start,jump) 2 > err', function(done){
+				var k = [],k1=[];
+				var map = [0,1,[2,2],3,4]
+				q2.addLikePropsEach(map,fun4,1).then(err(done),succ(2,done))
 			})
 		})
     })
@@ -567,7 +600,7 @@ describe('测试Queue-fun Queue 队列类', function(){
 				assert.equal(0, q1.getQueueLength(), "初始错误")
 				q1.push(fn,[1]).then(null,NULLFUN);
 				assert.equal(1, q1.getQueueLength(), "实时值错误")
-				q1.allLike([1,2,3],fn).then(null,NULLFUN);
+				q1.addLikeArray([1,2,3],fn).then(null,NULLFUN);
 				assert.equal(4, q1.getQueueLength(), "实时值错误")
 				q1.clear("clear");
 				done();
@@ -884,6 +917,40 @@ describe('测试Queue-fun Queue 队列类', function(){
 					return def.promise;
 				},{timeout:300}).then(succ("OK",done),err(done))
 			})
+		})
+		describe("#使用其他Promise实现",function(){
+			var promises = {
+				"easy-promise":require('easy-promise')
+				,"q":require('q')
+			}
+			if(typeof Promise == "function" && Promise.prototype.then){
+				promises["原生Promise"] = Promise;
+			}
+			for(var _p in promises){
+				(function(name,Promise){
+					var _then;
+					if(Promise.prototype && Promise.prototype.then){
+						_then = Promise.prototype.then;
+					}else if(Promise.defer){
+						_then = Promise.defer().promise.then;
+					}
+
+					it(name,function(done){
+						var _Queue = Queue.createUse(Promise);
+						var queue = new _Queue(1);
+						var mark;
+						var promise = queue.go(fun2,[1]).then(function(d){
+							mark=d;
+						}).then(function(){
+							if(mark != 1){return done("队列运行不正常")};
+							//if(promise.return){reutrn done("未成功切换Promise实现")}
+							if(_then === promise.then) done();
+						})
+
+					})
+				})(_p,promises[_p])
+			}
+
 		})
 	})
 });

@@ -93,28 +93,34 @@ var queue = new QueueFun(10,{
         ,"event_queue_add":function(item,queue){}     //有执行项添加到队列后执行
         ,"event_item_resolve":function(value,queue){} //执行单元resolve后执行
         ,"event_item_reject":function(err,queue){}    //执行单元reject后执行
-        ,"event_item_finally":function(queue){}    //执行单元reject后执行
+        ,"event_item_finally":function(queue){}       //执行单元完成后执行
         ,"retry":0                                    //执行单元出错重试次数
         ,"retry_type":false                           //重试模式 false:搁置,true:优先 
         ,"timeout":0                                  //执行单元的超时时间(毫秒)
     })
 ```
 
-#### QueueFun.setPromise(Promise) 
-切换内部使用的Promise , v1.X 默认使用的是 [bluebird][github-bluebird]  
+#### QueueFun.use(Promise) , QueueFun.createUse(Promise)
+修改内部使用的Promise , v1.X 默认使用的是 [bluebird][github-bluebird]  
 如有必要可以切换为其他Promise实现类如 **[q][github-q] / 原生Promise** 其实现了`defer`,`then`的promise的类都可以.
 设置此项将影响插入队列方法: `push` `unshift` `go` `jump` 等返回的promise实例.  
+QueueFun.use(Promise) 是修改当前类的内部Promise;  
+QueueFun.createUse(Promise) 将返回一个新的类;  
 
 ```javascript
 var Queue = require("queue-fun") //默认内部使用bluebird
 //使用q做为队列使用的promise实现
-Queue.setPromise(require("q"));
+Queue.use(require("q"));
 //使用原生Promise做为队列使用的promise实现
-Queue.setPromise(Promise);
+Queue.use(Promise);
+
+//创建一个新的类NQueue,此类内部使用q做为队列使用的promise实现,不影响原来的Queue;
+var NQueue = Queue.createUse(require("q"));
 ```
 
 #### QueueFun.Q
-配合使用的Promise流程控制类,是一个扩展的Promise类, 参看 [extend-promise#类扩展](https://github.com/cnwhy/extend-promise#类扩展),注并未用extend-promise类展Promise原型,Promise实力的方法与内部使用的Promise有关
+配合使用的Promise流程控制类,是一个扩展的Promise类, 参看 [extend-promise#类扩展](https://github.com/cnwhy/extend-promise#类扩展)  
+注:并未用[extend-promise](https://github.com/cnwhy/extend-promise)库展Promise原型,Promise实例的方法与内部使用的Promise有关
 
 ### Queue API  
 #### queue.push(promisefun, *args[]*, *options*)  
@@ -132,30 +138,40 @@ Queue.setPromise(Promise);
 - 所有单元执行完前，且没有执行单元状态为rejected，其状态一直为pending
 - 所有单元的promise状态都为fulfilled时，状态才为fulfilled，值为各执行单元值组成的数组或对像。
 - 运行单元的promise有rejected时，其状态立即为rejected，理由同最先变为rejected的值行单元的理由。  
-#### queue.all(arr,*start*,*jump*)
-添加一批执行单元。
-- `arr` 元素同queue.push方法 `[[promisefun,args,options], [promisefun,args,options]]`
-- `start` 添加完后是否立即运行队列 默认 false
-- `jump` 是否优先执行 默认 false  
 
-#### queue.allLike/allArray (arrArgs[],promisefun,*options*,*start*,*jump*)  
-向队列添加同一批同逻辑的运行单元.
-- `arrArgs[]` array 参数数组,多个参数请嵌套数组 `[1,2,[3,3.1],4]`
-- `promisefun`  
+#### queue.addArray(arr,*start*,*jump*)
+添加一批执行单元,返回的promise解决值为一个数组。
+- `arr` 元素同queue.push方法的参数 `[promisefun,args,options]`
+- `start` 添加完后是否立即运行队列 可以省略 默认 false
+- `jump` 是否优先执行 可以省略 默认 false  
 
-返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
+#### queue.addProps(props,*start*,*jump*)
+添加一批执行单元,返回的promise解决值为和props对应的对像。
+- `props` 是一个map对像,值同queue.push方法的参数 `[promisefun,args,options]`
+- `start` 添加完后是否立即运行队列 可以省略 默认 false
+- `jump` 是否优先执行 可以省略 默认 false  
+
+#### queue.addLikeArray (arrArgs[],promisefun,*options*,*start*,*jump*)  
+向队列添加同一批同逻辑的运行单元,返回的promise解决值为一个数组.
+- `arrArgs[]` array 参数数组,多个参数请嵌套数组`[1,2,[3,3.1],4]`,向promisefun传参时会自动展开.
+- `promisefun` 返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
 - `options` 参看*queue.push* 可以省略
-- `start` 添加完后是否立即运行队列 默认 false
-- `jump` 是否优先执行 默认 false  
+- `start` 添加完后是否立即运行队列 可以省略 默认false
+- `jump` 是否优先执行 可以省略 默认false  
 
-#### queue.allEach(arr/map,promisefun,*options*,*start*,*jump*)  
-第一个参数可以是数组，也可以是一个map对像。  
-类似allLike，只是向promisefun传参类似forEach传参 (element, index, arrArgs)  
+#### queue.addLikeArrayEach (arrArgs[],promisefun,*options*,*start*,*jump*)
+类似`queue.addLikeArray`,只是向promisefun传参有区别,类似forEach传参 (element, index, arrArgs)
 
-#### queue.allMap(map,promisefun,*options*,*start*,*jump*)  
-第一个参数可以是数组，也可以是一个map对像。  
-类似allLike，只是向promisefun传参类似forEach传参 (element, index, arrArgs)  
-注意：返回的promise，的值将也是一个map对像
+#### queue.addLikeProps (props,promisefun,*options*,*start*,*jump*)  
+向队列添加同一批同逻辑的运行单元,返回的promise解决值为和props对应的对像.
+- `props`  是一个map对像,值为数组时,会展开向`promisefun`传参.
+- `promisefun` 返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
+- `options` 参看*queue.push* 可以省略
+- `start` 添加完后是否立即运行队列 可以省略 默认false
+- `jump` 是否优先执行 可以省略 默认false  
+
+#### queue.addLikePropsEach (props,promisefun,*options*,*start*,*jump*)
+类似`queue.addLikeArray`,只是向promisefun传参有区别,类似forEach传参 (value, key, props)
   
 ### 队列控制
 #### queue.setMax(newMax)

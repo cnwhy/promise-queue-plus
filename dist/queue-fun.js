@@ -20,7 +20,8 @@
 "use strict";
 var epc = require("extend-promise/src/extendClass");
 var utils = require("./utils");
-module.exports = function(Promise){	
+
+function use(Promise){	
 	var _Promise;
 	setPromise(Promise);
 	var ONERROR = function(err){
@@ -33,7 +34,7 @@ module.exports = function(Promise){
 		_Promise = Queue.Q = epc(Promise,{});
 	};
 
-	Queue.setPromise = setPromise;
+	
 
 
 	function maxFormat(max){
@@ -342,6 +343,52 @@ module.exports = function(Promise){
 		}
 	}
 
+	function getAddArgs(data,fn,con,each){
+		var isArray = utils.isArray(data);
+		var rdata  = isArray ? [] : {};
+		function fill(k){
+			var args = each ? [].concat([data[k]],[k],[data]) : [].concat(data[k]);
+			rdata[k] = [fn,args,con];
+		}
+		if(isArray){
+			for(var i=0; i<data.length; i++){
+				fill(i);
+			}
+		}else{
+			for(var k in data){
+				fill(k);
+			}
+		}
+		return rdata;
+	}
+
+	function getBatchArgs(array,fn,con){
+		var baseN = 2,_con,start,jump;
+		if(utils.isObject(con)){
+			_con = con;
+			baseN++;
+		}
+		return {
+			con : _con,
+			start : arguments[baseN],
+			jump : arguments[++baseN]
+		}
+	}
+
+	function AddBatch(data,fn){
+		var queue = this.queue
+			,map = this.map
+			,each = this.each
+		var addArgs;
+		var args = getBatchArgs.apply(null,arguments)
+		addArgs = getAddArgs(data,fn,args.con,each)
+		if(map){
+			return queue.addProps(addArgs,args.start,args.jump);
+		}else{
+			return queue.addArray(addArgs,args.start,args.jump);
+		}
+	}
+
 	Queue.prototype = {
 		//获取/设置配置
 		option: function(name){
@@ -376,8 +423,94 @@ module.exports = function(Promise){
 			o._addItem(unit,true,true);
 			return unit.defer.promise;
 		}
+
+		/*
+		//插入一组
+		addArray([
+			[fn,args,con]
+		]).then(function(array){
+			console.log(array)
+		})
+		//插入prop 
+		addProp({
+			"a":[fn,args,con]
+		}).then(function(json){
+			console.log(json)
+		})
+		*/
+
+		,addArray: function(array,start,jump){
+			var parrs = [];
+			var o = this;
+			for(var i = 0;i<array.length;i++){
+				+function(){
+					var _i = i;
+					var unitArgs = array[_i];
+					var _p = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
+					parrs.push(_p);
+				}()
+			}
+			var nextP = _Promise.defer();
+			_Promise.all(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
+			if(start) this.start();
+			return nextP.promise;
+		}
+		,addProps: function(props,start,jump){
+			var parrs = {};
+			var o = this;
+			for(var k in props){
+				+function(){
+					var _k = k;
+					var unitArgs = props[_k];
+					var _p = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
+					parrs[_k] = _p;
+				}()
+			}
+			var nextP = _Promise.defer();
+			_Promise.allMap(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
+			if(start) this.start();
+			return nextP.promise;
+		}
+		,addLikeArray: function(array,fn,con){
+			return AddBatch.apply({queue:this},arguments);
+			// var addArgs;
+			// var args = getBatchArgs.apply(null,arguments)
+			// addArgs = getAddArgs(array,fn,args.con)
+			// return this.addArray(addArgs,args.start,args.jump);
+		}
+		,addLikeProps: function(props,fn,con){
+			return AddBatch.apply({queue:this,map:true},arguments);
+			// var addArgs;
+			// var args = getBatchArgs.apply(null,arguments)
+			// addArgs = getAddArgs(props,fn,_con)
+			// return this.addProps(addArgs,args.start,args.jump);
+		}
+		,addLikeArrayEach: function(array,fn,con){
+			return AddBatch.apply({queue:this,each:true},arguments);
+			// var addArgs;
+			// var args = getBatchArgs.apply(null,arguments)
+			// addArgs = getAddArgs(array,fn,_con,true)
+			// return this.addArray(parrs,args.start,args.jump);
+		}
+		,addLikePropsEach: function(array,fn,con){
+			return AddBatch.apply({queue:this,each:true,map:true},arguments);
+			// var addArgs;
+			// var args = getBatchArgs.apply(null,arguments)
+			// addArgs = getAddArgs(props,fn,_con,true)
+			// return this.addProps(addArgs,args.start,args.jump);
+		}
+
+		/*
+		//插入一组相同过程对像,参数会被展开
+		addLikeArray([value,value],function(value){}).then(function(array){})		
+		addLikeProp({key:value},function(value){}).then(function(array){})
+		
+		//参数不会被展开
+		addlikeArrayEach([value,value],function(value,key,map){})
+		addlikePropEach({key:value},function(value,key,map){})
+		*/
 		//插入数组处理
-		,all: function(arr,start,jump){
+/*		,all: function(arr,start,jump){
 			var parrs = [];
 			var o = this;
 			for(var i = 0;i<arr.length;i++){
@@ -464,26 +597,16 @@ module.exports = function(Promise){
 			_Promise.allMap(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
 			if(start) this.start();
 			return nextP.promise;
-		}
-
-		
-		/**事件**/
-		// //有执行项添加进执行单元后执行
-		// ,event_queue_add: function(){}
-		// //执行单元成功后
-		// ,event_item_resolve: function(data){}
-		// //执行单元失败
-		// ,event_item_reject: function(err,obj){}
-		// //队列开始执行
-		// ,event_queue_begin: function(){}
-		// //队列运行结束执行
-		// ,event_queue_end: function(){}
+		}*/
 	};
 
 	Queue.prototype.allArray = Queue.prototype.allLike
-	
+
+	Queue.use = setPromise;
+	Queue.createUse = use;
 	return Queue;
 };
+module.exports = use;
 },{"./utils":3,"extend-promise/src/extendClass":6}],3:[function(require,module,exports){
 'use strict';
 // exports.isPlainObject = function(obj) {
@@ -625,7 +748,7 @@ module.exports = function(nextTick){
 		})
 	}
 
-	Promise.prototype.toString = function () {
+	Promise_.prototype.toString = function () {
 	    return "[object Promise]";
 	}
 
@@ -746,7 +869,7 @@ function extendClass(Promise,obj,funnames){
 	if(!QClass.Promise && Promise != obj) QClass.Promise = Promise;
 
 	//defer
-	if(isFunction(Promise.prototype.then)){
+	if(isFunction(Promise) && isFunction(Promise.prototype.then)){
 		QClass.defer = function() {
 			var resolve, reject;
 			var promise = new Promise(function(_resolve, _reject) {

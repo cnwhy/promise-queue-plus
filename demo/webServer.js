@@ -3,7 +3,8 @@ var express = require('express');
 var QueueFun = require('../');
 var q = QueueFun.Q;
 var app = express();
-var sp = 500;
+var sp = 1000;
+var port = 8800;
 
 var queue = new QueueFun(1,{
 	'event_queue_add' : setBusy
@@ -13,12 +14,7 @@ var queue = new QueueFun(1,{
 var isBusy = false
 function setBusy(){
 	var queueLength = this.getQueueLength();
-	if(queueLength > 5){
-		isBusy = true;
-	}
-	if(queueLength < 2){
-		isBusy = false;
-	}
+	isBusy = queueLength > 3
 }
 
 function cb(sp,cb){
@@ -31,14 +27,6 @@ function promfun1(sp,i){
 	},sp)
 	return deferred.promise;
 }
-
-app.use(function(req, res, next){
-	if(isBusy){
-		res.end("sever busy!")
-	}else{
-		next();
-	};
-})
 
 app.all('/', function(req, res, next){
 	res.end("hello world!")
@@ -54,6 +42,16 @@ app.all('/test2', function(req, res, next){
 		res.end("test2 OK")
 	})
 });
+
+
+app.use('/test3',function(req, res, next){
+	if(isBusy){
+		return res.end("sever busy!")
+	}else{
+		next();
+	};
+})
+
 //有延时，有队列
 app.all('/test3', function(req, res, next){
 	queue.go(promfun1,[sp,'test3 OK']).done(function(data){
@@ -62,7 +60,9 @@ app.all('/test3', function(req, res, next){
 		next(new Error(err));
 	})
 });
-app.listen(8800);
+app.listen(port,function(){
+	console.log("打开 http://127.0.0.1:" + port + "/test3 快速刷新查看效果");
+});
 
 
 
