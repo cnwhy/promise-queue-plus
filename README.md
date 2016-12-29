@@ -28,10 +28,14 @@ var Queue = require('queue-fun');
 var q = Queue.Q;  //配合使用的Promise流程控制类，也可以使用原生Promise也可以用q.js,等实现Prmise的类库
 
 //实列化一个最大并发为1的队列
-var queue1 = new Queue(1); 
+var queue1 = new Queue(1,{
+        ,"retry":0              //执行单元出错重试次数
+        ,"retry_type":false     //重试模式 false:搁置,true:优先 
+        ,"timeout":0            //超时
+    });
 
 //定义一个Promise风格的异步方法
-function testfun(i){
+function testfn(i){
     var defer = q.defer();
     setTimeout(function(){
         defer.resolve(i)
@@ -40,26 +44,26 @@ function testfun(i){
 }
 var log = function(a){ console.log(a); }
 
-queue1.push(testfun,[1]) //向队列添加运行单元
+queue1.push(testfn,[1]) //向队列添加运行单元
 .then(console.log); 
 
 queue1.push(function(){return 2;}) //插入普通方法会按Promises/A+规则反回promise
 .then(console.log);
 
-queue1.unshift(testfun,[0]) //插入优先执行项 (后进先出)
+queue1.unshift(testfn,[0]) //插入优先执行项 (后进先出)
 .then(console.log);
 
-queue1.allArray([3,4],testfun,{'event_item_resolve':log}) //插入多个运行项 array,完成一项,将执行一次log
+queue1.addLikeArray([3,4],testfn,{'event_item_resolve':log}) //插入多个运行项 array,完成一项,将执行一次log
 .then(console.log) 
 
-queue1.allMap({'a':5,'b':6,'c':7},testfun,{'event_item_resolve':log}) //插入多个运行项 map , 最后的promise值也是一个对应map
+queue1.addLikeProps({'a':5,'b':6,'c':7},testfn,{'event_item_resolve':log}) //插入多个运行项 map , 最后的promise值也是一个对应map
 .then(console.log)
 
 //queue1.start(); //执行队列
-queue1.go(testfun,['go']).then(console.log) 
+queue1.go(testfn,['go']).then(console.log) 
 /*
  这条语等价于:
-    queue1.push(testfun,['go']).then(console.log);
+    queue1.push(testfn,['go']).then(console.log);
     queue1.start(); 
  一般情况下使用go方法将比较方便
 */

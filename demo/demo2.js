@@ -54,7 +54,7 @@ function testfun(i){
 
 //用push添加项 不会启动队列；
 queue1.push(testfun,['Q1'])
-queue1.allArray([1,2,3,4,5],function(v,i,arr){
+queue1.addLikeArrayEach([1,2,3,4,5],function(v,i,arr){
 	var deferred = q.defer();
 	setTimeout(function(){
 		deferred.resolve(i+":"+v);

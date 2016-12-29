@@ -950,10 +950,7 @@ function use(Promise){
 		,addLikePropsEach: function(array,fn,con){
 			return AddBatch.apply({queue:this,each:true,map:true},arguments);
 		}
-
 	};
-
-	Queue.prototype.allArray = Queue.prototype.allLike
 
 	Queue.use = setPromise;
 	Queue.createUse = use;
