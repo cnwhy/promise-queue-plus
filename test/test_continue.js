@@ -1,13 +1,13 @@
 //持续运行测试
-var alignment = require('../index');
-var q = alignment.Q;
+var QueueFun = require('../');
+var q = QueueFun.Q;
 
 var leng =50000;
 var minN = 5000
 
-var alignment1 = new alignment(1000)
+var queue = new QueueFun(1000)
 
-//console.log(alignment1)
+//console.log(queue)
 function testfun(){
 	return function(i){
 		var deferred = q.defer();
@@ -32,12 +32,12 @@ function adde(){
 	for(var i = 0; i<leng; i++){
 		+function(){
 			var k = n++;
-			alignment1.go(testfun(),[k],{
+			queue.go(testfun(),[k],{
 				'event_item_finally':function(){
 					data++;
-					(data%20000 == 0) && console.log('第' + data + '个事件完成 - 运行中事件数：' + this.getRunCount() + ' - 剩余：' + this.getQueueLength());
+					(data%20000 == 0) && console.log('第' + data + '个事件完成 - 运行中事件数：' + this.getRunCount() + ' - 剩余：' + this.getLength());
 					setTimeout((function(){
-						if(this.getQueueLength()<minN){
+						if(this.getLength()<minN){
 							console.log('队列少于'+minN+'添加'+leng+'！')
 							adding || adde();
 						}

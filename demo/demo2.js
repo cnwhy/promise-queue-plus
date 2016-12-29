@@ -3,7 +3,7 @@ var q = Queue.Q; //内置的Promise，仿Q的API
 
 //定义一些方法
 function event_item_resolve(data,obj){
-	console.log('第' + data + '事件完成 - 运行中事件数：' + this.getRunCount() + ' - 剩余：' + this.getQueueLength())
+	console.log('第' + data + '事件完成 - 运行中事件数：' + this.getRunCount() + ' - 剩余：' + this.getLength())
 }
 function event_item_reject(err,obj){
 	console.log('一个执行单元状态拒绝' + err)
@@ -18,8 +18,8 @@ function event_item_finally(){
 	console.log('一个执行单元完成')
 }
 function event_queue_add(){
-	console.log("向队列添加项 ",this.isStart(),this.getQueueLength()) 
-	if(!this.isStart() && this.getQueueLength() >= 5){ //当添加了10个项后,运行队列
+	console.log("向队列添加项 ",this.isStart(),this.getLength()) 
+	if(!this.isStart() && this.getLength() >= 5){ //当添加了10个项后,运行队列
 		console.log(">> 触发自动运行条件")
 		this.start();
 	}

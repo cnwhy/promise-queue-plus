@@ -1,13 +1,13 @@
 {
   "name": "queue-fun",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.1",
   "description": "基于Promise的持续队列",
   "homepage": "https://github.com/cnwhy/queue-fun",
   "main": "index.js",
   "files": [
     "index.js",
-    "queue-fun.min.js",
-    "lib/*",
+    "src/*",
+    "dist/*",
     "demo/*"
   ],
   "scripts": {

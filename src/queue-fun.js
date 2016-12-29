@@ -15,9 +15,6 @@ function use(Promise){
 		_Promise = Queue.Q = epc(Promise,{});
 	};
 
-	
-
-
 	function maxFormat(max){
 		var _max = (+max)>>0;
 		if(_max > 0){
@@ -28,11 +25,14 @@ function use(Promise){
 	}
 
 	function toPromise(fn){
-		return _Promise.resolve(1).then(function(){
-			return fn();
-		});
-	}
 
+		//return _Promise.resolve({then:function(a){a(fn())}})
+		try{
+			return _Promise.resolve(fn());
+		}catch(e){
+			return _Promise.reject(e);
+		}
+	}
 	/**
 	 * 队列类
 	 * @param {Number} max 队列最大并行数
@@ -78,7 +78,7 @@ function use(Promise){
 			}
 		}
 		//正在排队的项数
-		this.getQueueLength = function(){
+		this.getLength = function(){
 			return _queue.length;
 		}
 		//正在运行的项数
@@ -119,8 +119,7 @@ function use(Promise){
 				//if(unit){
 					var xc_timeout
 						,_mark=0
-					var onoff = unit._options.queue_event_onoff
-						,timeout = +getOption('timeout',unit,self)
+					var timeout = +getOption('timeout',unit,self)
 						,retryNo = getOption('retry',unit,self)
 						,retryType = getOption('retry_type',unit,self)
 						,_self = unit._options.self
@@ -131,18 +130,22 @@ function use(Promise){
 						_runCount--;
 					}
 
+
+
 					var afinally = function(){
-						if(runQueueUnitEvent.call(unit,'event_item_finally',self,self,unit) !== false){
-							onoff && runQueueEvent.call(self,'event_item_finally',self,unit);
-						}
+						autoRun(unit,self,'event_item_finally',self,self,unit)
+						// if(runEvent.call(unit,'event_item_finally',self,self,unit) !== false){
+						// 	onoff && runEvent.call(self,'event_item_finally',self,self,unit);
+						// }
 					}
 
 					var issucc = function(data){
 						if(fix()) return;
 						unit.defer.resolve(data);  //通知执行单元,成功
-						if(runQueueUnitEvent.call(unit,'event_item_resolve',self,data,self,unit) !== false){
-							onoff && runQueueEvent.call(self,'event_item_resolve',data,self,unit);
-						}
+						autoRun(unit,self,'event_item_resolve',self,data,self,unit)
+						// if(runEvent.call(unit,'event_item_resolve',self,data,self,unit) !== false){
+						// 	onoff && runEvent.call(self,'event_item_resolve',self,data,self,unit);
+						// }
 						afinally();
 					}
 
@@ -152,9 +155,10 @@ function use(Promise){
 							self._addItem(unit,retryType,true,false)
 						}else{
 							unit.defer.reject(err);  //通知执行单元,失败
-							if(runQueueUnitEvent.call(unit,'event_item_reject',self,err,self,unit) !== false){
-								onoff && runQueueEvent.call(self,'event_item_reject',err,self,unit);
-							}
+							autoRun(unit,self,'event_item_reject',self,err,self,unit)
+							// if(runEvent.call(unit,'event_item_reject',self,err,self,unit) !== false){
+							// 	onoff && runEvent.call(self,'event_item_reject',self,err,self,unit);
+							// }
 						}
 						afinally();			
 					};
@@ -162,7 +166,7 @@ function use(Promise){
 					//队列开始执行事件
 					if(_runCount == 0 && !_isStart){
 						_isStart = true;
-						runQueueEvent.call(self,'event_queue_begin',self);
+						runEvent.call(self,'event_queue_begin',self,self);
 					}
 
 					var nextp = toPromise(function(){
@@ -172,7 +176,7 @@ function use(Promise){
 							queueRun();
 						}else if(_runCount == 0 && _isStart){//队列结束执行事件
 							_isStart = false;
-							runQueueEvent.call(self,'event_queue_end',self);
+							runEvent.call(self,'event_queue_end',self,self);
 						}
 					});
 					_runCount += 1;
@@ -282,30 +286,31 @@ function use(Promise){
 		}
 	}
 
-	function runEvent(event,queue,arg){
-		var o = queue;
+	function runEvent(eventName,self){
+		var event = this._options[eventName]
+			,arg = utils.arg2arr(arguments,2);
 		if(utils.isFunction(event)){
 			try{
-				return event.apply(o,arg)
+				return event.apply(self,arg)
 			}catch(e){
-				onError.call(o,e);
+				onError.call(self,e);
 			}
 		}else{
 			return !!event;
 		}
 	}
 
-	function runQueueEvent(eventName){
-		var event = this._options[eventName]
-			,arg = utils.arg2arr(arguments,1);
-		return runEvent.call(null,event,this,arg);
+	function autoRun(unit,queue){
+		var onoff = unit._options.queue_event_onoff;
+		var args = utils.arg2arr(arguments,2);
+		if(runEvent.apply(unit,args) !== false){
+			onoff && runEvent.apply(queue,args);
+		}
 	}
-	function runQueueUnitEvent(eventName,queue){
-		var event = this._options[eventName]
-			,arg = utils.arg2arr(arguments,2);
-		return runEvent.call(null,event,queue,arg);
-	};
-	function runAddEvent(aObbj){runQueueEvent.call(this,'event_queue_add',aObbj,this);}
+
+	function runAddEvent(unit){
+		runEvent.call(this,'event_queue_add',this,unit,this);
+	}
 
 	//构建执行单元对象
 	function getQueueUnit(fn,args,options){
@@ -405,21 +410,6 @@ function use(Promise){
 			return unit.defer.promise;
 		}
 
-		/*
-		//插入一组
-		addArray([
-			[fn,args,con]
-		]).then(function(array){
-			console.log(array)
-		})
-		//插入prop 
-		addProp({
-			"a":[fn,args,con]
-		}).then(function(json){
-			console.log(json)
-		})
-		*/
-
 		,addArray: function(array,start,jump){
 			var parrs = [];
 			var o = this;
@@ -454,131 +444,17 @@ function use(Promise){
 		}
 		,addLikeArray: function(array,fn,con){
 			return AddBatch.apply({queue:this},arguments);
-			// var addArgs;
-			// var args = getBatchArgs.apply(null,arguments)
-			// addArgs = getAddArgs(array,fn,args.con)
-			// return this.addArray(addArgs,args.start,args.jump);
 		}
 		,addLikeProps: function(props,fn,con){
 			return AddBatch.apply({queue:this,map:true},arguments);
-			// var addArgs;
-			// var args = getBatchArgs.apply(null,arguments)
-			// addArgs = getAddArgs(props,fn,_con)
-			// return this.addProps(addArgs,args.start,args.jump);
 		}
 		,addLikeArrayEach: function(array,fn,con){
 			return AddBatch.apply({queue:this,each:true},arguments);
-			// var addArgs;
-			// var args = getBatchArgs.apply(null,arguments)
-			// addArgs = getAddArgs(array,fn,_con,true)
-			// return this.addArray(parrs,args.start,args.jump);
 		}
 		,addLikePropsEach: function(array,fn,con){
 			return AddBatch.apply({queue:this,each:true,map:true},arguments);
-			// var addArgs;
-			// var args = getBatchArgs.apply(null,arguments)
-			// addArgs = getAddArgs(props,fn,_con,true)
-			// return this.addProps(addArgs,args.start,args.jump);
 		}
 
-		/*
-		//插入一组相同过程对像,参数会被展开
-		addLikeArray([value,value],function(value){}).then(function(array){})		
-		addLikeProp({key:value},function(value){}).then(function(array){})
-		
-		//参数不会被展开
-		addlikeArrayEach([value,value],function(value,key,map){})
-		addlikePropEach({key:value},function(value,key,map){})
-		*/
-		//插入数组处理
-/*		,all: function(arr,start,jump){
-			var parrs = [];
-			var o = this;
-			for(var i = 0;i<arr.length;i++){
-				+function(){
-					var _i = i;
-					var unitArgs = arr[_i];
-					var _p = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
-					parrs.push(_p);
-				}()
-			}
-			var nextP = _Promise.defer();
-			_Promise.all(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
-			if(start) this.start();
-			return nextP.promise;
-		}
-		,'allLike': function(arr,fn,con){
-			var parrs = [],baseN = 2,config,start,jump;
-			var o = this;
-			if(utils.isObject(con)){
-				config = con;
-				baseN++;
-			}else{
-				con = null;
-			}
-			start = arguments[baseN];
-			jump = arguments[++baseN];
-			for(var i=0;i<arr.length;i++){
-				+function(){
-					var _i = i;
-					var rges = [].concat([arr[_i]],[_i],[arr])
-					var _p = jump ? o.unshift(fn,rges,con) : o.push(fn,rges,con);
-					parrs.push(_p);
-				}()
-			}
-			var nextP = _Promise.defer();
-			_Promise.all(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
-			if(start) this.start();
-			return nextP.promise;
-		}
-		,'allEach': function(arr,fn,con){
-			var parrs = [],baseN = 2,config,start,jump;
-			var o = this;
-			if(utils.isObject(con)){
-				config = con;
-				baseN++;
-			}else{
-				con = null;
-			}
-			start = arguments[baseN];
-			jump = arguments[++baseN];
-			for(var i in arr){
-				+function(){
-					var _i = i;
-					var rges = [].concat([arr[_i]],[_i],[arr])
-					var _p = jump ? o.unshift(fn,rges,con) : o.push(fn,rges,con);
-					parrs.push(_p);
-				}()
-			}
-			var nextP = _Promise.defer();
-			_Promise.all(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
-			if(start) this.start();
-			return nextP.promise;
-		}
-		,'allMap': function(map,fn,con){
-			var parrs = {},baseN = 2,config,start,jump;
-			var o = this;
-			if(utils.isObject(con)){
-				config = con;
-				baseN++;
-			}else{
-				con = null;
-			}
-			start = arguments[baseN];
-			jump = arguments[++baseN];
-			for(var i in map){
-				+function(){
-					var _i = i;
-					var rges = [].concat([map[_i]],[_i],[map])
-					var _p = jump ? o.unshift(fn,rges,con) : o.push(fn,rges,con);
-					parrs[_i] = _p;
-				}()
-			}
-			var nextP = _Promise.defer();
-			_Promise.allMap(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
-			if(start) this.start();
-			return nextP.promise;
-		}*/
 	};
 
 	Queue.prototype.allArray = Queue.prototype.allLike

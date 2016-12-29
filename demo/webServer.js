@@ -13,7 +13,7 @@ var queue = new QueueFun(1,{
 
 var isBusy = false
 function setBusy(){
-	var queueLength = this.getQueueLength();
+	var queueLength = this.getLength();
 	isBusy = queueLength > 3
 }
 

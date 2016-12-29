@@ -20,21 +20,22 @@ gulp.task('build',['test'],function(){
 	return gulp.src('./browser-source/*.js')
 		.pipe(browserify())
 		.pipe(header(banner))
-		.pipe(rename({
-			basename:package.name
-		}))
+		// .pipe(rename({
+		// 	basename:package.name
+		// }))
 		.pipe(gulp.dest('./dist'))
 		.pipe(uglify())
 		.pipe(header(banner))
 		.pipe(rename({
-			basename:package.name+".min"
+			//basename:package.name+".min"
+      suffix:".min"
 		}))
 		.pipe(gulp.dest('./dist'));
 })
 
 
 gulp.task('pre-test', function () {
-  return gulp.src(['lib/**/*.js'])
+  return gulp.src(['src/**/*.js'])
     // Covering files 
     .pipe(istanbul())
     // Force `require` to return covered files 

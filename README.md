@@ -100,12 +100,17 @@ var queue = new QueueFun(10,{
     })
 ```
 
+#### QueueFun.Q
+配合使用的Promise流程控制类,是一个扩展的Promise类, 参看 [extend-promise#类扩展](https://github.com/cnwhy/extend-promise#类扩展)  
+注:并未用[extend-promise][github-extend-promise]库展Promise原型,promise实例的方法与内部使用的Promise有关
+
 #### QueueFun.use(Promise) , QueueFun.createUse(Promise)
 修改内部使用的Promise , v1.X 默认使用的是 [bluebird][github-bluebird]  
 如有必要可以切换为其他Promise实现类如 **[q][github-q] / 原生Promise** 其实现了`defer`,`then`的promise的类都可以.
 设置此项将影响插入队列方法: `push` `unshift` `go` `jump` 等返回的promise实例.  
 QueueFun.use(Promise) 是修改当前类的内部Promise;  
 QueueFun.createUse(Promise) 将返回一个新的类;  
+>做过很多Promise实现库的对比,`bluebird`确实是最快的.
 
 ```javascript
 var Queue = require("queue-fun") //默认内部使用bluebird
@@ -118,9 +123,6 @@ Queue.use(Promise);
 var NQueue = Queue.createUse(require("q"));
 ```
 
-#### QueueFun.Q
-配合使用的Promise流程控制类,是一个扩展的Promise类, 参看 [extend-promise#类扩展](https://github.com/cnwhy/extend-promise#类扩展)  
-注:并未用[extend-promise][github-extend-promise]库展Promise原型,promise实例的方法与内部使用的Promise有关
 
 ### Queue API  
 #### queue.push(promisefun, *args[]*, *options*)  
@@ -184,10 +186,6 @@ queue.push(function(a,b){return a+b;},[1,2],{
 #### queue.addLikePropsEach (props,promisefun,*options*,*start*,*jump*)
 类似`queue.addLikeArray`,只是向`promisefun`传参有区别,类似forEach传参 (value, key, props)
 
-#### queue.setMax(newMax)
-修改队列并行数  
- - `newMax` 新的并行数,若队列已启动,不会影响
-
 #### queue.start()
 启动队列  
 
@@ -199,6 +197,22 @@ queue.push(function(a,b){return a+b;},[1,2],{
 
 #### queue.option(name, *value*)  
 获取/设置 队列配置 `options`
+
+#### queue.getMax()
+获取队列最大并行数
+
+#### queue.setMax(newMax)
+修改队列并行数  
+- `newMax` 新的并行数,若队列已启动,不会影响
+
+#### queue.getLength() 
+获取队列中剩余项数
+
+#### queue.getRunCount()
+获取正在运行的项数
+
+#### queue.isStart()
+队列是否正在运行
 
 #### queue.onError = function(err){}
 队列其它事件抛出的错误都将在此函数捕获,默认为一个空函数,你可以直接制定处理函数.

@@ -596,12 +596,12 @@ describe('测试Queue-fun Queue 队列类', function(){
 				q1.setMax(1);
 				done();
 			});
-			it('.getQueueLength()', function(done){
-				assert.equal(0, q1.getQueueLength(), "初始错误")
+			it('.getLength()', function(done){
+				assert.equal(0, q1.getLength(), "初始错误")
 				q1.push(fn,[1]).then(null,NULLFUN);
-				assert.equal(1, q1.getQueueLength(), "实时值错误")
+				assert.equal(1, q1.getLength(), "实时值错误")
 				q1.addLikeArray([1,2,3],fn).then(null,NULLFUN);
-				assert.equal(4, q1.getQueueLength(), "实时值错误")
+				assert.equal(4, q1.getLength(), "实时值错误")
 				q1.clear("clear");
 				done();
 			});

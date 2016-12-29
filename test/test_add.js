@@ -1,5 +1,5 @@
 //不同Promise实现，插入效率测试
-var QueueFun = require('../lib/index');
+var QueueFun = require('../src/queue-fun');
 var q = require("q");
 var bluebird = require("bluebird")
 var p1 = require('extend-promise/Promise/nextTick');
