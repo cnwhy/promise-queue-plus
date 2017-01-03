@@ -29,8 +29,8 @@
   ],
   "dependencies": {
     "bluebird": "^3",
-    "easy-promise": "*",
-    "extend-promise": "*"
+    "easy-promise": "0.0.4",
+    "extend-promise": "0.0.5"
   },
   "devDependencies": {
     "express": "^4.12.3",
