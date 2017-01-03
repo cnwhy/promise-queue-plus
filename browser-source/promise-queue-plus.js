@@ -5,7 +5,7 @@
 		var global = typeof window !== "undefined" ? window : self;
 		global[name] = factory();
 	} else {
-		throw new Error("加载 " + name + " 模块失败！，请检查您的环境！")
+		throw new Error('Loading the "' + name + '" module failed!');
 	}
 }('PromiseQueuePlus', function () {
 	return require('../src/queue')(require('easy-promise/setTimeout'));

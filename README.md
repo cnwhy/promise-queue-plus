@@ -69,6 +69,7 @@ go
 ```
 
 ## API 
+[中文](https://github.com/cnwhy/promise-queue-plus/blob/master/README.zh-cn.md)  
 ### new Queue(maxConcurrent,*options*)
 Creates a queue;
 - `maxConcurrent` MaxNumber Concurrent
@@ -99,13 +100,16 @@ Modify the internal use of Promise , the default use of [bluebird][github-bluebi
 - `Queue.createUse(Promise)` return new Class use `Promise`;  
 
 ```javascript
-var Queue = require("queue-fun")
-Queue.use(Promise);
+var Queue = require("promise-queue-plus") //default use of bluebird
+Queue.Promise.defer().promise instanceof Promise; //false
+//use ES6 Promise
+Queue.use(Promise);  
+Queue.Promise.defer().promise instanceof Promise; //true
 var queue1 = new Queue(1);
-queue1.push(function(){}) instanceof Promise // true;
+queue1.push(function(){}) instanceof Promise; //true;
 
 //Create a new class `NQueue`, does not affect the original` Queue`;
-var NQueue = Queue.createUse(require("q"));
+var NQueue = Queue.createUse(require("q")); //use q module
 ```
 
   
@@ -135,29 +139,29 @@ like `unshift` and start queue;
 
 ### queue.addArray(arr,*start*,*jump*)
 Add multiple jobs with Array, promise value as Array;
-- `arr` 元素同queue.push方法的参数 `[promisefun,args[],options]`
-- `start` 添加完后是否立即运行队列 可以省略 默认 false
-- `jump` 是否优先执行 可以省略 默认 false  
+- `arr`   arguments Array
+- `start` Whether to start immediately
+- `jump`  Whether the LIFO mode
 
 ```js
-    queue.addArray([
-        [function(a){return a},[1],{}],
-        [function(a,b){return a+b;},[1,2],{}]
-    ],true).then(console.log,console.error);
+queue.addArray([
+    [function(a){return a},[1],{}],
+    [function(a,b){return a+b;},[1,2],{}]
+],true).then(console.log,console.error);
 //output [1,3]
 ```
 
 ### queue.addProps(props,*start*,*jump*)  
 Add multiple jobs with Array, promise value as Map;
-- `props` 是一个map对像,值同queue.push方法的参数 `[promisefun,args[],options]`
-- `start` 添加完后是否立即运行队列 可以省略 默认 false
-- `jump` 是否优先执行 可以省略 默认 false  
+- `props` arguments Map 
+- `start` Whether to start immediately
+- `jump`  Whether the LIFO mode
 
 ```js
-    queue.addProps({
-        a:[function(a){return a},[1]],
-        b:[function(a,b){return a+b;},[1,2]]
-    },true).then(console.log,console.error);
+queue.addProps({
+    a:[function(a){return a},[1]],
+    b:[function(a,b){return a+b;},[1,2]]
+},true).then(console.log,console.error);
 //output {a:1,b:3}
 ```
 
@@ -165,14 +169,14 @@ Add multiple jobs with Array, promise value as Map;
 Syntax for 'addArray' sugar 
 
 ```js
-    function addfn(){
-        var i = 0,sum;
-        while(i<arguments.length){
-            sum = i == 0 ? arguments[i] : sum + arguments[i];
-        }
-        return sum;
+function addfn(){
+    var i = 0,sum;
+    while(i<arguments.length){
+        sum = i == 0 ? arguments[i] : sum + arguments[i];
     }
-    queue.addLikeArray([1,[1,2]],addfn,true).then(console.log,console.error);
+    return sum;
+}
+queue.addLikeArray([1,[1,2]],addfn,true).then(console.log,console.error);
 //output [1,3]
 ```
 
@@ -180,10 +184,10 @@ Syntax for 'addArray' sugar
 like `queue.addLikeArray`,To "promisefun" pass parameters similar to "forEach" (element, index, arrArgs)
 
 ```js
-    function fn(v,i,arr){
-        return i + " : " + v;
-    }
-    queue.addLikeArrayEach([1,[1,2]],fn,true).then(console.log,console.error);
+function fn(v,i,arr){
+    return i + " : " + v;
+}
+queue.addLikeArrayEach([1,[1,2]],fn,true).then(console.log,console.error);
 //output [ '0 : 1', '1 : 1,2' ]
 ```
 
@@ -224,8 +228,8 @@ Queue other error handling
 
 ## About the browser  
 Because `bluebird` too big, Of browsers use [easy-promise][github-easy-promise] instead of [bluebird][github-bluebird];  
-- dist/queue-fun.js
-- dist/queue-fun.min.js (gzip 3.8k)
+- dist/promise-queue-plus.js
+- dist/promise-queue-plus.min.js (gzip 3.8k)
 
 [npm-image]: https://img.shields.io/npm/v/promise-queue-plus.svg
 [download-image]: https://img.shields.io/npm/dm/promise-queue-plus.svg
@@ -233,7 +237,7 @@ Because `bluebird` too big, Of browsers use [easy-promise][github-easy-promise] 
 [coveralls-image]: https://coveralls.io/repos/cnwhy/promise-queue-plus/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/r/cnwhy/promise-queue-plus?branch=master
 [BuildStatus-url]: https://travis-ci.org/cnwhy/promise-queue-plus
-[BuildStatus-image]: https://travis-ci.org/cnwhy/promise-queue-plus.svg
+[BuildStatus-image]: https://api.travis-ci.org/cnwhy/promise-queue-plus.svg
 
 [github-q]: https://github.com/kriskowal/q
 [github-bluebird]: https://github.com/petkaantonov/bluebird

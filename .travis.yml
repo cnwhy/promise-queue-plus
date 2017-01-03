@@ -11,10 +11,10 @@ node_js:
 before_script:
   - npm install -g gulp
   - npm install -g istanbul
-# script: grunt
+script: gulp
 # Run test script, depending on istanbul install
 #  - "test -n $(npm -ps ls istanbul) || npm test"
 #  - "test -z $(npm -ps ls istanbul) || npm run-script test-travis"
 
-#after_script:
-#  - "test -e ./coverage/lcov.info && npm install coveralls@2 && cat ./coverage/lcov.info | coveralls"
+after_script:
+  - "test -e ./coverage/lcov.info && npm install coveralls@2 && cat ./coverage/lcov.info | coveralls"

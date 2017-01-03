@@ -1,6 +1,6 @@
 var path = require("path");
 var gulp = require("gulp");
-var util = require("gulp-util");
+// var util = require("gulp-util");
 var mocha = require("gulp-mocha");
 var istanbul = require("gulp-istanbul");
 var browserify = require("gulp-browserify");

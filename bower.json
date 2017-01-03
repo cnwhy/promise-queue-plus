@@ -1,14 +1,15 @@
 {
   "name": "promise-queue-plus",
-  "description": "基于Promise的持续队列",
+  "description": "Promise-based queue. Support timeout, retry and so on.",
   "main": "dist/promise-queue-plus.js",
   "authors": [
     "cnwhy <w.why@163.com>"
   ],
   "license": "BSD-2-Clause",
   "keywords": [
-    "queue",
     "Promise",
+    "queue",
+    "pool",
     "Async",
     "Q",
     "队列"
