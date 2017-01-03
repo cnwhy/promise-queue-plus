@@ -1,1 +1,1 @@
-﻿module.exports = require("./src/queue-fun")(require("bluebird"));
+﻿module.exports = require("./src/queue")(require("bluebird"));

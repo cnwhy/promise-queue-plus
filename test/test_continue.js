@@ -1,11 +1,11 @@
 //持续运行测试
-var QueueFun = require('../');
-var q = QueueFun.Q;
+var Queue = require('../');
+var q = Queue.Q;
 
 var leng =50000;
 var minN = 5000
 
-var queue = new QueueFun(1000)
+var queue = new Queue(1000)
 
 //console.log(queue)
 function testfun(){

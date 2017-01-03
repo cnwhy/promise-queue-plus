@@ -1,6 +1,4 @@
 var assert = require("assert");
-// var QueueFun = require('../index');
-// var Queue = QueueFun();
 var Queue = require('../index');
 var Q = Queue.Q;
 var MAXTIME = 30
@@ -276,7 +274,7 @@ function testEvent(event_name,event,succ_value,done){
 }
 
 //普通测试
-describe('测试Queue-fun Queue 队列类', function(){ 
+describe('测试Queue', function(){ 
     describe('队列 插入，执行', function(){
 		describe('#单个添加测试', function(){
 			var q1 = new Queue(1)

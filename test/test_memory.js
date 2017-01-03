@@ -1,12 +1,12 @@
 "use strict";
 var express = require('express');
-var QueueFun = require('../');
-var Q = QueueFun.Q;
+var Queue = require('../');
+var Q = Queue.Q;
 var app = express();
 var sp = 1000;
 var port = 8899;
 var queues = [];
-var queue1 = new QueueFun(100,{event_queue_end:function(){console.log('end')}});
+var queue1 = new Queue(100,{event_queue_end:function(){console.log('end')}});
 
 
 function pfun(){
@@ -24,7 +24,7 @@ app.all('/add/queue/:n', function(req, res, next){
 	var oRAM = process.memoryUsage().rss;
 	if(addn > 0){
 		for(var i = 0; i<addn; i++){
-			queues.push(new QueueFun(1))
+			queues.push(new Queue(1))
 		}
 		var ram = process.memoryUsage().rss-oRAM;
 		res.end("增加"+addn+"个队列,内存增加"+(ram/1024)+"K "+"单个队列"+(ram/1024/addn)+"K");

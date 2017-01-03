@@ -6,13 +6,13 @@ var queue1 = new Queue(1);
 
 //定义一个Promise风格的异步方法
 function testfun(i){
-    var defer = q.defer();
-    setTimeout(function(){
-        defer.resolve(i)
-    },300)
-    return defer.promise;
+    return new Promise(function(resolve,reject){
+        setTimeout(function(){
+            resolve(i)
+        },300)
+    })
 }
-var log = function(a){ console.log(a); }
+var log = function(msg){ console.log(msg); }
 
 queue1.push(testfun,[1]) //向队列添加运行单元
 .then(console.log); 
@@ -31,12 +31,17 @@ queue1.addLikeProps({'a':5,'b':6,'c':7},testfun,{'event_item_resolve':log}) //�
 
 var v = 0;
 queue1.push(function(){
-	if(++v<8) throw "err";
-	return testfun(v);
+    if(++v<8) throw "err";
+    return testfun(v);
 },{
-	retry:10 //设置重试次数
-	,retry_type:true //重试模式为优先
+    retry:10 //设置重试次数
+    ,retry_type:true //重试模式为优先
 }).then(console.log)
 
 //queue1.start(); //执行队列
 queue1.go(testfun,['go']).then(console.log) 
+
+
+
+
+

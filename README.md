@@ -1,74 +1,59 @@
-# queue-fun  
+# Promise Queue +  
 [![NPM version][npm-image]][npm-url]
 [![npm download][download-image]][npm-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 [![Build Status][BuildStatus-image]][BuildStatus-url]
 
-[npm-image]: https://img.shields.io/npm/v/queue-fun.svg
-[download-image]: https://img.shields.io/npm/dm/queue-fun.svg
-[npm-url]: https://npmjs.org/package/queue-fun
-[coveralls-image]: https://coveralls.io/repos/cnwhy/queue-fun/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/r/cnwhy/queue-fun?branch=master
-[BuildStatus-url]: https://travis-ci.org/cnwhy/queue-fun
-[BuildStatus-image]: https://travis-ci.org/cnwhy/queue-fun.svg
-queue-fun 是基于Promise的持续队列。
-
-## 使用场景
-- 巨量同逻辑业务平稳处理
-- 间歇性高并发系统
-- 控制单用户占用资源过高
-
-**一点建议** 
->并不需要把整个业务的后续处理全都放到队列中去，而只是将高消耗的那一部分放入队列，利用Promise的异部处理机制来处理后续的操作。  
->如果已经在用Promise来控制异步流程,我相信这是一个非高好用的队列,因为你在在编写代码的时候几乎可以忘记队列的存在，但是他就在那里默默的工作着，代码可读性和灵活性也没有丝毫影响。
+Promise-based queue. Support timeout, retry and so on.  
 
 ## demo
 ``` javascript
-var Queue = require('queue-fun');
-var q = Queue.Q;  //配合使用的Promise流程控制类，也可以使用原生Promise也可以用q.js,等实现Prmise的类库
+var Queue = require('promise-queue-plus');
+var q = Queue.Promise; //a Promise utils;
 
-//实列化一个最大并发为1的队列
+//Realize a queue with a maximum concurrency of 1
 var queue1 = new Queue(1,{
-        ,"retry":0              //执行单元出错重试次数
-        ,"retry_type":false     //重试模式 false:搁置,true:优先 
-        ,"timeout":0            //超时
+        ,"retry":0              //Number of retries
+        ,"retry_type":false     //retry now? 
+        ,"timeout":0            //The timeout period
     });
 
-//定义一个Promise风格的异步方法
-function testfn(i){
-    var defer = q.defer();
-    setTimeout(function(){
-        defer.resolve(i)
-    },300)
-    return defer.promise;
+//a return promise function
+function testfun(i){
+    return new Promise(function(resolve,reject){
+        setTimeout(function(){
+            resolve(i)
+        },300)
+    })
 }
-var log = function(a){ console.log(a); }
+var log = function(msg){ console.log(msg); }
 
-queue1.push(testfn,[1]) //向队列添加运行单元
+queue1.push(testfn,[1]) //add job (FIFO)
 .then(console.log); 
 
-queue1.push(function(){return 2;}) //插入普通方法会按Promises/A+规则反回promise
+queue1.push(function(){return 2;}) //The normal function returns a promise according to the Promise / A + rule
 .then(console.log);
 
-queue1.unshift(testfn,[0]) //插入优先执行项 (后进先出)
+queue1.unshift(testfn,[0]) //add job (LIFO)
 .then(console.log);
 
-queue1.addLikeArray([3,4],testfn,{'event_item_resolve':log}) //插入多个运行项 array,完成一项,将执行一次log
+queue1.addLikeArray([3,4],testfn,{'event_item_resolve':log}) //Add multiple jobs with Array, Work done will execute 'event_item_resolve'
 .then(console.log) 
 
-queue1.addLikeProps({'a':5,'b':6,'c':7},testfn,{'event_item_resolve':log}) //插入多个运行项 map , 最后的promise值也是一个对应map
+queue1.addLikeProps({'a':5,'b':6,'c':7},testfn,{'event_item_resolve':log}) //Add multiple jobs with Map,
 .then(console.log)
 
-//queue1.start(); //执行队列
+//queue1.start(); //queue start;
 queue1.go(testfn,['go']).then(console.log) 
 /*
- 这条语等价于:
+ Equivalent to:
     queue1.push(testfn,['go']).then(console.log);
     queue1.start(); 
- 一般情况下使用go方法将比较方便
+* In general, it is convenient to use the 'go'
 */
 
-/* 输出如下:
+// Output:
+/* 
 0
 1
 2
@@ -84,147 +69,171 @@ go
 ```
 
 ## API 
-V0.x [请看这里](https://github.com/cnwhy/queue-fun/wiki/V0.x-%E6%96%87%E6%A1%A3)  
-### QueueFun
-#### new QueueFun(runMax,*options*) 实例化队列
-- runMax 并行运行队列方法的最大个数
-- options 配置队列 **开始,结束** 事件,运行单元的 **成功,失败** 事件及 **重试,超时** 配置。
+### new Queue(maxConcurrent,*options*)
+Creates a queue;
+- `maxConcurrent` MaxNumber Concurrent
+
+about options like:
 ```js
-var QueueFun = require("queue-fun");
-var queue = new QueueFun(10,{
-        "event_queue_begin":function(queue){}         //队列开始
-        ,"event_queue_end":function(queue){}          //队列完成
-        ,"event_queue_add":function(item,queue){}     //有执行项添加到队列后执行
-        ,"event_item_resolve":function(value,queue){} //执行单元resolve后执行
-        ,"event_item_reject":function(reason,queue){}    //执行单元reject后执行
-        ,"event_item_finally":function(queue){}       //执行单元完成后执行
-        ,"retry":0                                    //执行单元出错重试次数
-        ,"retry_type":false                           //重试模式 false:搁置,true:优先 
-        ,"timeout":0                                  //执行单元的超时时间(毫秒)
+var Queue = require("promise-queue-plus");
+var queue = new Queue(10,{
+        "event_queue_begin":function(queue){}         
+        ,"event_queue_end":function(queue){}          
+        ,"event_queue_add":function(item,queue){}     
+        ,"event_item_resolve":function(value,queue){} 
+        ,"event_item_reject":function(reason,queue){}    
+        ,"event_item_finally":function(queue){}       
+        ,"retry":3                                    
+        ,"retry_type":true                           
+        ,"timeout":2000                                  
     })
 ```
 
-#### QueueFun.Q
-配合使用的Promise流程控制类,是一个扩展的Promise类, 参看 [extend-promise#类扩展](https://github.com/cnwhy/extend-promise#类扩展)  
-注:并未用[extend-promise][github-extend-promise]库展Promise原型,promise实例的方法与内部使用的Promise有关
+### Queue.Q / Queue.Promise
+a Promise utils, See also [extend-promise#类扩展](https://github.com/cnwhy/extend-promise#类扩展)  
+Note: The prototype is not expanded with [extend-promise][github-extend-promise];
 
-#### QueueFun.use(Promise) , QueueFun.createUse(Promise)
-修改内部使用的Promise , v1.X 默认使用的是 [bluebird][github-bluebird]  
-如有必要可以切换为其他Promise实现类如 **[q][github-q] / 原生Promise** 其实现了`defer`,`then`的promise的类都可以.
-设置此项将影响插入队列方法: `push` `unshift` `go` `jump` 等返回的promise实例.  
-QueueFun.use(Promise) 是修改当前类的内部Promise;  
-QueueFun.createUse(Promise) 将返回一个新的类;  
->做过很多Promise实现库的对比,`bluebird`确实是最快的.
+### Queue.use(Promise) , Queue.createUse(Promise)
+Modify the internal use of Promise , the default use of [bluebird][github-bluebird]    
+- `Queue.use(Promise)` use `Promise`;  
+- `Queue.createUse(Promise)` return new Class use `Promise`;  
 
 ```javascript
-var Queue = require("queue-fun") //默认内部使用bluebird
-//使用q做为队列使用的promise实现
-Queue.use(require("q"));
-//使用原生Promise做为队列使用的promise实现
+var Queue = require("queue-fun")
 Queue.use(Promise);
+var queue1 = new Queue(1);
+queue1.push(function(){}) instanceof Promise // true;
 
-//创建一个新的类NQueue,此类内部使用q做为队列使用的promise实现,不影响原来的Queue;
+//Create a new class `NQueue`, does not affect the original` Queue`;
 var NQueue = Queue.createUse(require("q"));
 ```
 
-
-### Queue API  
-#### queue.push(promisefun, *args[]*, *options*)  
-向队列中尾部添加运行单元，返回promise  
-- promisefun: promise function
-- args: 传入的参数
-- options  配置独立的 **成功,失败** 事件及 **重试,超时** 配置,在批量插入队列时会比较有用。
+  
+### queue.push(promisefun, *args[]*, *options*)  
+add job (FIFO)
+- `promisefun` promise function
+- `args` arguments 
+about options like:
 ```js
 queue.push(function(a,b){return a+b;},[1,2],{
-    ,"event_item_resolve":false                   //1. 值为false,不会触发队列配置的事件,默认为true;
-    ,"event_item_reject":function(reason,queue){} //2. 值为函数,将先执行此函数,再触发队列配置的事件
-    ,"event_item_finally":function(queue){return false;} //3. 若显式反回false,不会再触发队列配置的事件
-    ,"retry":0                                 //错重试次数,覆盖队列配置
-    ,"retry_type":false                        //重试模式 false:搁置,true:优先 ,覆盖队列配置
-    ,"timeout":0                               //结执行单元的超时时间(毫秒)
+    ,"event_item_resolve":false                   //1. Queue events are not executed
+    ,"event_item_reject":function(reason,queue){} //2. Are executed
+    ,"event_item_finally":function(queue){return false;} //3. if return false,Queue events are not executed
+    ,"retry":0                                 //Override the queue settings
+    ,"retry_type":false                        //Override the queue settings
+    ,"timeout":0                               //Override the queue settings
 });
 ```
 
 
-#### queue.unshift(promisefun, *args[]*, *options*) 参数同push 向队列中头部添加运行单元  
-#### queue.go(promisefun, *args[]*, *options*)  同push,会启动队列.  
-#### queue.jump(promisefun, *args[]*, *options*) 同unshift,会启动队列.  
+### queue.unshift(promisefun, *args[]*, *options*)
+add job (FIFO)
+### queue.go(promisefun, *args[]*, *options*)  
+like `push` and start queue;
+### queue.jump(promisefun, *args[]*, *options*) 同unshift,会启动队列.  
+like `unshift` and start queue;
 
-### 批量添加
-以下方法可以向队列添加一组运行单元，返回的promise对像，状态规则如下：
-- 所有单元执行完前，且没有执行单元状态为rejected，其状态一直为pending
-- 所有单元的promise状态都为fulfilled时，状态才为fulfilled，值为各执行单元值组成的数组或对像。
-- 运行单元的promise有rejected时，其状态立即为rejected，理由同最先变为rejected的值行单元的理由。  
-
-#### queue.addArray(arr,*start*,*jump*)
-添加一批执行单元,返回的promise解决值为一个数组。
+### queue.addArray(arr,*start*,*jump*)
+Add multiple jobs with Array, promise value as Array;
 - `arr` 元素同queue.push方法的参数 `[promisefun,args[],options]`
 - `start` 添加完后是否立即运行队列 可以省略 默认 false
 - `jump` 是否优先执行 可以省略 默认 false  
 
-#### queue.addProps(props,*start*,*jump*)
-添加一批执行单元,返回的promise解决值为和props对应的对像。
+```js
+    queue.addArray([
+        [function(a){return a},[1],{}],
+        [function(a,b){return a+b;},[1,2],{}]
+    ],true).then(console.log,console.error);
+//output [1,3]
+```
+
+### queue.addProps(props,*start*,*jump*)  
+Add multiple jobs with Array, promise value as Map;
 - `props` 是一个map对像,值同queue.push方法的参数 `[promisefun,args[],options]`
 - `start` 添加完后是否立即运行队列 可以省略 默认 false
 - `jump` 是否优先执行 可以省略 默认 false  
 
-#### queue.addLikeArray (arrArgs[],promisefun,*options*,*start*,*jump*)  
-向队列添加同一批同逻辑的运行单元,返回的promise解决值为一个数组.
-- `arrArgs[]` array 参数数组,多个参数请嵌套数组`[1,2,[3,3.1],4]`,向promisefun传参时会自动展开.
-- `promisefun` 返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
-- `options` 参看*queue.push* 可以省略
-- `start` 添加完后是否立即运行队列 可以省略 默认false
-- `jump` 是否优先执行 可以省略 默认false  
+```js
+    queue.addProps({
+        a:[function(a){return a},[1]],
+        b:[function(a,b){return a+b;},[1,2]]
+    },true).then(console.log,console.error);
+//output {a:1,b:3}
+```
 
-#### queue.addLikeArrayEach (arrArgs[],promisefun,*options*,*start*,*jump*)
-类似`queue.addLikeArray`,只是向`promisefun`传参有区别,类似forEach传参 (element, index, arrArgs)
+### queue.addLikeArray(arrArgs[],promisefun,*options*,*start*,*jump*)  
+Syntax for 'addArray' sugar 
 
-#### queue.addLikeProps (props,promisefun,*options*,*start*,*jump*)  
-向队列添加同一批同逻辑的运行单元,返回的promise解决值为和props对应的对像.
-- `props`  是一个map对像,值为数组时,会展开向`promisefun`传参.
-- `promisefun` 返回值为promise对像或类promise对像的方法，普通函数将转变以函数值为值的promise对像
-- `options` 参看*queue.push* 可以省略
-- `start` 添加完后是否立即运行队列 可以省略 默认false
-- `jump` 是否优先执行 可以省略 默认false  
+```js
+    function addfn(){
+        var i = 0,sum;
+        while(i<arguments.length){
+            sum = i == 0 ? arguments[i] : sum + arguments[i];
+        }
+        return sum;
+    }
+    queue.addLikeArray([1,[1,2]],addfn,true).then(console.log,console.error);
+//output [1,3]
+```
 
-#### queue.addLikePropsEach (props,promisefun,*options*,*start*,*jump*)
-类似`queue.addLikeArray`,只是向`promisefun`传参有区别,类似forEach传参 (value, key, props)
+### queue.addLikeArrayEach (arrArgs[],promisefun,*options*,*start*,*jump*)
+like `queue.addLikeArray`,To "promisefun" pass parameters similar to "forEach" (element, index, arrArgs)
 
-#### queue.start()
-启动队列  
+```js
+    function fn(v,i,arr){
+        return i + " : " + v;
+    }
+    queue.addLikeArrayEach([1,[1,2]],fn,true).then(console.log,console.error);
+//output [ '0 : 1', '1 : 1,2' ]
+```
 
-#### queue.stop()
-暂停队列
+### queue.addLikeProps (props,promisefun,*options*,*start*,*jump*)  
+Syntax for 'addArray' sugar 
 
-#### queue.clear(reason)  
-清空队列,队列中未开始执行的剩余的项都将以`reason`为理由拒绝。
+### queue.addLikeProps (props,promisefun,*options*,*start*,*jump*)
+like `queue.addLikeArray`,To "promisefun" pass parameters similar to "forEach" (value, key, props)
 
-#### queue.option(name, *value*)  
-获取/设置 队列配置 `options`
+### queue.start()
+start queue;
 
-#### queue.getMax()
-获取队列最大并行数
+### queue.stop()
+stop queue;
 
-#### queue.setMax(newMax)
-修改队列并行数  
-- `newMax` 新的并行数,若队列已启动,不会影响
+### queue.clear(reason)  
+clear queue,The rest of the queue will be rejected with `reason`;
 
-#### queue.getLength() 
-获取队列中剩余项数
+### queue.option(name, *value*)  
+Set/Get queue `options`
 
-#### queue.getRunCount()
-获取正在运行的项数
+### queue.getMax()
+Get MaxNumber Concurrent;
 
-#### queue.isStart()
-队列是否正在运行
+### queue.setMax(newMax)
+Set MaxNumber Concurrent;
 
-#### queue.onError = function(err){}
-队列其它事件抛出的错误都将在此函数捕获,默认为一个空函数,你可以直接制定处理函数.
+### queue.getLength() 
+Queue remaining job count;
 
-## 关于浏览器端 
-考虑到 [bluebird][github-bluebird] 的大小, 浏览器端使用了简洁的 [easy-promise][github-easy-promise]做为内部使用的Promise;  
+### queue.getRunCount()
+Queue running job count;
+
+### queue.isStart()
+
+### queue.onError = function(err){}
+Queue other error handling
+
+## About the browser  
+Because `bluebird` too big, Of browsers use [easy-promise][github-easy-promise] instead of [bluebird][github-bluebird];  
 - dist/queue-fun.js
 - dist/queue-fun.min.js (gzip 3.8k)
+
+[npm-image]: https://img.shields.io/npm/v/promise-queue-plus.svg
+[download-image]: https://img.shields.io/npm/dm/promise-queue-plus.svg
+[npm-url]: https://npmjs.org/package/promise-queue-plus
+[coveralls-image]: https://coveralls.io/repos/cnwhy/promise-queue-plus/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/r/cnwhy/promise-queue-plus?branch=master
+[BuildStatus-url]: https://travis-ci.org/cnwhy/promise-queue-plus
+[BuildStatus-image]: https://travis-ci.org/cnwhy/promise-queue-plus.svg
 
 [github-q]: https://github.com/kriskowal/q
 [github-bluebird]: https://github.com/petkaantonov/bluebird

@@ -1,5 +1,5 @@
 //不同Promise实现，插入效率测试
-var QueueFun = require('../src/queue-fun');
+var Queue = require('../src/queue');
 var q = require("q");
 var bluebird = require("bluebird")
 var p1 = require('extend-promise/Promise/nextTick');
@@ -48,7 +48,7 @@ function getTestFun(Pro){
 var maxl = 50000,bxs = 500;
 var _fun = function(){}
 function test(P,name){
-	var queue = new (QueueFun(P))(bxs)
+	var queue = new (Queue(P))(bxs)
 	console.log('>>>>> '+name+' 测试开始')
 	def = P.defer();
 	var testfun = getTestFun(P)
@@ -90,7 +90,7 @@ function test(P,name){
 	next();
 //});
 
-//var queue = new (QueueFun.Queue(nq))(1);
+//var queue = new (Queue.Queue(nq))(1);
 // queue.push(function(){
 // 	//return 1;
 // 	throw "err";

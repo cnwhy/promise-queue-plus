@@ -1,7 +1,7 @@
 {
-  "name": "queue-fun",
+  "name": "promise-queue-plus",
   "description": "基于Promise的持续队列",
-  "main": "dist/queue-fun.js",
+  "main": "dist/promise-queue-plus.js",
   "authors": [
     "cnwhy <w.why@163.com>"
   ],
@@ -13,7 +13,7 @@
     "Q",
     "队列"
   ],
-  "homepage": "https://github.com/cnwhy/queue-fun",
+  "homepage": "https://github.com/cnwhy/promise-queue-plus",
   "ignore": [
     "**/.*",
     "node_modules",
