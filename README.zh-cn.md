@@ -142,7 +142,7 @@ queue.push(function(a,b){return a+b;},[1,2],{
 参数同 `push` 向队列中头部添加运行单元  
 ### queue.go(promisefun, *args[]*, *options*)  
 同 `push`,会启动队列.  
-### queue.jump(promisefun, *args[]*, *options*) 
+### queue.jump(promisefun, *args[]*, *options*)  
 同 `unshift`,会启动队列.  
 
 ### 批量添加

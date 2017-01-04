@@ -10,7 +10,7 @@ node_js:
   - "7"
 before_script:
   - npm install -g gulp
-  - npm install -g istanbul
+#  - npm install -g istanbul
 script: gulp
 # Run test script, depending on istanbul install
 #  - "test -n $(npm -ps ls istanbul) || npm test"

@@ -131,13 +131,15 @@ queue.push(function(a,b){return a+b;},[1,2],{
 
 
 ### queue.unshift(promisefun, *args[]*, *options*)
-add job (FIFO)
-### queue.go(promisefun, *args[]*, *options*)  
-like `push` and start queue;
-### queue.jump(promisefun, *args[]*, *options*) 同unshift,会启动队列.  
-like `unshift` and start queue;
+add job (FIFO)  
 
-### queue.addArray(arr,*start*,*jump*)
+### queue.go(promisefun, *args[]*, *options*)  
+like `push` and start queue  
+
+### queue.jump(promisefun, *args[]*, *options*)  
+like `unshift` and start queue  
+
+### queue.addArray(arr,*start*,*jump*)  
 Add multiple jobs with Array, promise value as Array;
 - `arr`   arguments Array
 - `start` Whether to start immediately
