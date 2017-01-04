@@ -1,4 +1,6 @@
 # queue-fun
+`queue-fun` 重构并改名为 [promise-queue-plus](https://www.npmjs.com/package/promise-queue-plus), 'queue-fun' 不再更新. 
+
 [![NPM version][npm-image]][npm-url]
 [![npm download][download-image]][npm-url]
 [![Test coverage][coveralls-image]][coveralls-url]
