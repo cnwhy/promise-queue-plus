@@ -69,7 +69,7 @@ go
 ```
 
 ## API 
-[中文](https://github.com/cnwhy/promise-queue-plus/blob/master/README.zh-cn.md)  
+  
 ### new Queue(maxConcurrent,*options*)
 Creates a queue;
 - `maxConcurrent` MaxNumber Concurrent

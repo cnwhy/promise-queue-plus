@@ -1,6 +1,6 @@
 {
   "name": "promise-queue-plus",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "Promise-based queue. Support timeout, retry and so on.",
   "homepage": "https://github.com/cnwhy/promise-queue-plus",
   "main": "index.js",
@@ -30,8 +30,8 @@
   ],
   "dependencies": {
     "bluebird": "^3",
-    "easy-promise": "0.0.4",
-    "extend-promise": "0.0.5"
+    "easy-promise": "^0.0.4",
+    "extend-promise": "^0.0.6"
   },
   "devDependencies": {
     "express": "^4.12.3",
