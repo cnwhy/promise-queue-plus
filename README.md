@@ -69,7 +69,7 @@ go
 ```
 
 ## API 
-  
+
 ### new Queue(maxConcurrent,*options*)
 Creates a queue;
 - `maxConcurrent` MaxNumber Concurrent
@@ -131,7 +131,7 @@ queue.push(function(a,b){return a+b;},[1,2],{
 
 
 ### queue.unshift(promisefun, *args[]*, *options*)
-add job (FIFO)  
+add job (LIFO)  
 
 ### queue.go(promisefun, *args[]*, *options*)  
 like `push` and start queue  
