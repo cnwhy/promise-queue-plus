@@ -13,7 +13,7 @@ var q = Queue.Promise; //a Promise utils;
 
 //Realize a queue with a maximum concurrency of 1
 var queue1 = new Queue(1,{
-        ,"retry":0              //Number of retries
+        "retry":0               //Number of retries
         ,"retry_type":false     //retry now? 
         ,"timeout":0            //The timeout period
     });
@@ -69,7 +69,7 @@ go
 ```
 
 ## API 
-  
+
 ### new Queue(maxConcurrent,*options*)
 Creates a queue;
 - `maxConcurrent` MaxNumber Concurrent
@@ -82,7 +82,7 @@ var queue = new Queue(10,{
         ,"event_queue_end":function(queue){}          
         ,"event_queue_add":function(item,queue){}     
         ,"event_item_resolve":function(value,queue){} 
-        ,"event_item_reject":function(reason,queue){}    
+        ,"event_item_reject":function(reason,queue){} 
         ,"event_item_finally":function(queue){}       
         ,"retry":3                                    
         ,"retry_type":true                           
@@ -120,7 +120,7 @@ add job (FIFO)
 about options like:
 ```js
 queue.push(function(a,b){return a+b;},[1,2],{
-    ,"event_item_resolve":false                   //1. Queue events are not executed
+    "event_item_resolve":false                    //1. Queue events are not executed
     ,"event_item_reject":function(reason,queue){} //2. Are executed
     ,"event_item_finally":function(queue){return false;} //3. if return false,Queue events are not executed
     ,"retry":0                                 //Override the queue settings
@@ -131,7 +131,7 @@ queue.push(function(a,b){return a+b;},[1,2],{
 
 
 ### queue.unshift(promisefun, *args[]*, *options*)
-add job (FIFO)  
+add job (LIFO)  
 
 ### queue.go(promisefun, *args[]*, *options*)  
 like `push` and start queue  
@@ -194,10 +194,10 @@ queue.addLikeArrayEach([1,[1,2]],fn,true).then(console.log,console.error);
 ```
 
 ### queue.addLikeProps (props,promisefun,*options*,*start*,*jump*)  
-Syntax for 'addArray' sugar 
+Syntax for 'addProps' sugar 
 
-### queue.addLikeProps (props,promisefun,*options*,*start*,*jump*)
-like `queue.addLikeArray`,To "promisefun" pass parameters similar to "forEach" (value, key, props)
+### queue.addLikePropsEach (props,promisefun,*options*,*start*,*jump*)
+like `queue.addLikeProps`,To "promisefun" pass parameters similar to "forEach" (value, key, props)
 
 ### queue.start()
 start queue;

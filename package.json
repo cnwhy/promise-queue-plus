@@ -1,6 +1,6 @@
 {
   "name": "promise-queue-plus",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0",
   "description": "Promise-based queue. Support timeout, retry and so on.",
   "homepage": "https://github.com/cnwhy/promise-queue-plus",
   "main": "index.js",
