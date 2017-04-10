@@ -2,22 +2,22 @@ var Queue = require('../');
 var q = Queue.Q; //内置的Promise，仿Q的API
 
 //定义一些方法
-function event_item_resolve(data,obj){
+function workResolve(data,obj){
 	console.log('第' + data + '事件完成 - 运行中事件数：' + this.getRunCount() + ' - 剩余：' + this.getLength())
 }
-function event_item_reject(err,obj){
+function workReject(err,obj){
 	console.log('一个执行单元状态拒绝' + err)
 }
-function event_queue_begin(){
+function queueStart(){
 	console.log('>>>>>> 队列开始')
 }
-function event_queue_end(){
+function queueEnd(){
 	console.log('<<<<<< 队列结束了')
 }
-function event_item_finally(){
+function workFinally(){
 	console.log('一个执行单元完成')
 }
-function event_queue_add(){
+function workAdd(){
 	console.log("向队列添加项 ",this.isStart(),this.getLength()) 
 	if(!this.isStart() && this.getLength() >= 5){ //当添加了10个项后,运行队列
 		console.log(">> 触发自动运行条件")
@@ -31,13 +31,13 @@ function event_queue_add(){
 
 //new Queue([并行数],<options>) 并行数必须
 var queue1 = new Queue(2,{
-		"event_item_resolve": event_item_resolve
-		,"event_item_reject": event_item_reject
-		,"event_item_finally": event_item_finally
-		,"event_queue_begin": event_queue_begin
-		,"event_queue_end": event_queue_end	
+		"queueStart": queueStart
+		,"queueEnd": queueEnd
+		,"workResolve": workResolve
+		,"workReject": workReject
+		,"workFinally": workFinally
 		,"retry":0 //出错重试次数 默认0;
-		,'event_queue_add':event_queue_add //event_queue_add只会在push/unshift方法添向项时才触发！
+		,'workAdd':workAdd //workAdd只会在push/unshift方法添向项时才触发！
 	})
 
 function testfun(i){
@@ -72,10 +72,10 @@ setTimeout(function(){
 	queue1.go(testfun,['Qerr']).then(console.log,console.log)  //err
 	//也可以这样添加“回调”
 	var con = {
-		'event_item_resolve':function(data){
+		'workResolve':function(data){
 			console.log(data + '完成!')
 		}
-		,'event_item_reject':function(err){
+		,'workReject':function(err){
 			console.error(err)
 		}
 	}

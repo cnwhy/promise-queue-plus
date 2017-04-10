@@ -6,7 +6,7 @@ var app = express();
 var sp = 1000;
 var port = 8899;
 var queues = [];
-var queue1 = new Queue(100,{event_queue_end:function(){console.log('end')}});
+var queue1 = new Queue(100,{queueEnd:function(){console.log('end')}});
 
 
 function pfun(){

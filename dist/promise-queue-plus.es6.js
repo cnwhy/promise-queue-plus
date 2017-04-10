@@ -1,5 +1,5 @@
 /*!
- * promise-queue-plus v1.0.0-alpha.2
+ * promise-queue-plus v1.0.0
  * Homepage https://github.com/cnwhy/promise-queue-plus
  * License BSD-2-Clause
  */
@@ -337,8 +337,6 @@ function use(Promise){
 	}
 
 	function toPromise(fn){
-
-		//return _Promise.resolve({then:function(a){a(fn())}})
 		try{
 			return _Promise.resolve(fn());
 		}catch(e){
@@ -363,6 +361,19 @@ function use(Promise){
 			,"retry_type":0             //重试模式 0/false:搁置执行(插入队列尾部重试),1/true:优先执行 (插入队列头部重试)
 			,"timeout":0                //执行单元超时时间(毫秒)
 		}
+
+		var def = {
+			"queueStart":null    //队列开始
+			,"queueEnd":null     //队列完成
+			,"workAdd":null     //有执行项添加进执行单元后执行
+			,"workResolve":null  //成功
+			,"workReject":null   //失败
+			,"workFinally":null  //一个执行单元结束后
+			,"retry":0                  //执行单元出错重试次数
+			,"retryIsJump":false        //重试模式 false:搁置执行(插入队列尾部重试),true:优先执行 (插入队列头部重试)
+			,"timeout":0                //执行单元超时时间(毫秒)
+		}
+
 		var _queue = [];
 		var _max = maxFormat(max);
 		var _runCount = 0;
@@ -407,7 +418,7 @@ function use(Promise){
 		 * @param {queueUnit} unit 执行单元对像
 		 * @param {bool} stack  是否以栈模式(后进先出)插入
 		 * @param {bool} start  是否启动队列
-		 * @param {bool} noAdd  是否调用队列event_queue_add方法(重试模式需要)
+		 * @param {bool} noAdd  是否调用队列workAdd方法(重试模式需要)
 		 */
 		this._addItem = function(unit,stack,start,noAdd){
 			if(!(unit instanceof QueueUnit)) throw new TypeError('"unit" is not QueueUnit')
@@ -433,7 +444,7 @@ function use(Promise){
 						,_mark=0
 					var timeout = +getOption('timeout',unit,self)
 						,retryNo = getOption('retry',unit,self)
-						,retryType = getOption('retry_type',unit,self)
+						,retryType = getOption('retryIsJump',unit,self)
 						,_self = unit._options.self
 					var fix = function(){
 						if(xc_timeout) clearTimeout(xc_timeout)
@@ -445,18 +456,18 @@ function use(Promise){
 
 
 					var afinally = function(){
-						autoRun(unit,self,'event_item_finally',self,self,unit)
-						// if(runEvent.call(unit,'event_item_finally',self,self,unit) !== false){
-						// 	onoff && runEvent.call(self,'event_item_finally',self,self,unit);
+						autoRun(unit,self,'workFinally',self,self,unit)
+						// if(runEvent.call(unit,'workFinally',self,self,unit) !== false){
+						// 	onoff && runEvent.call(self,'workFinally',self,self,unit);
 						// }
 					}
 
 					var issucc = function(data){
 						if(fix()) return;
 						unit.defer.resolve(data);  //通知执行单元,成功
-						autoRun(unit,self,'event_item_resolve',self,data,self,unit)
-						// if(runEvent.call(unit,'event_item_resolve',self,data,self,unit) !== false){
-						// 	onoff && runEvent.call(self,'event_item_resolve',self,data,self,unit);
+						autoRun(unit,self,'workResolve',self,data,self,unit)
+						// if(runEvent.call(unit,'workResolve',self,data,self,unit) !== false){
+						// 	onoff && runEvent.call(self,'workResolve',self,data,self,unit);
 						// }
 						afinally();
 					}
@@ -467,9 +478,9 @@ function use(Promise){
 							self._addItem(unit,retryType,true,false)
 						}else{
 							unit.defer.reject(err);  //通知执行单元,失败
-							autoRun(unit,self,'event_item_reject',self,err,self,unit)
-							// if(runEvent.call(unit,'event_item_reject',self,err,self,unit) !== false){
-							// 	onoff && runEvent.call(self,'event_item_reject',self,err,self,unit);
+							autoRun(unit,self,'workReject',self,err,self,unit)
+							// if(runEvent.call(unit,'workReject',self,err,self,unit) !== false){
+							// 	onoff && runEvent.call(self,'workReject',self,err,self,unit);
 							// }
 						}
 						afinally();			
@@ -478,7 +489,7 @@ function use(Promise){
 					//队列开始执行事件
 					if(_runCount == 0 && !_isStart){
 						_isStart = true;
-						runEvent.call(self,'event_queue_begin',self,self);
+						runEvent.call(self,'queueStart',self,self);
 					}
 
 					var nextp = toPromise(function(){
@@ -488,7 +499,7 @@ function use(Promise){
 							queueRun();
 						}else if(_runCount == 0 && _isStart){//队列结束执行事件
 							_isStart = false;
-							runEvent.call(self,'event_queue_end',self,self);
+							runEvent.call(self,'queueEnd',self,self);
 						}
 					});
 					_runCount += 1;
@@ -542,20 +553,20 @@ function use(Promise){
 	 */
 	function QueueUnit(fn, args, options){
 		var def = {
-			'event_item_resolve' : true
-			,'event_item_reject' : true
-			,'event_item_finally' : true
-			,'queue_event_onoff' : true
+			'workResolve' : true
+			,'workReject' : true
+			,'workFinally' : true
+			,'queueEventTrigger' : true
 			,'regs':[]
 			,'self':null
 		}
 		var oNames = [
-			'event_item_resolve'    //是否执行队列event_item_resolve事件
-			,'event_item_reject'    //是否执行队列event_item_reject事件
-			,'event_item_finally'   //是否执行队列event_item_finally事件
-			,'queue_event_onoff'    //队列事件开关
+			'workResolve'    //是否执行队列workResolve事件
+			,'workReject'    //是否执行队列workReject事件
+			,'workFinally'   //是否执行队列workFinally事件
+			,'queueEventTrigger'    //队列事件开关
 			,'retry'                //重试次数
-			,'retry_type'           //重试模式
+			,'retryIsJump'           //重试模式
 			,'timeout'              //超时
 			,'self'                 //运行函数self
 		];
@@ -613,7 +624,7 @@ function use(Promise){
 	}
 
 	function autoRun(unit,queue){
-		var onoff = unit._options.queue_event_onoff;
+		var onoff = unit._options.queueEventTrigger;
 		var args = utils.arg2arr(arguments,2);
 		if(runEvent.apply(unit,args) !== false){
 			onoff && runEvent.apply(queue,args);
@@ -621,7 +632,7 @@ function use(Promise){
 	}
 
 	function runAddEvent(unit){
-		runEvent.call(this,'event_queue_add',this,unit,this);
+		runEvent.call(this,'workAdd',this,unit,this);
 	}
 
 	//构建执行单元对象
@@ -775,15 +786,6 @@ function use(Promise){
 module.exports = use;
 },{"./utils":5,"extend-promise/src/extendClass":2}],5:[function(require,module,exports){
 'use strict';
-// exports.isPlainObject = function(obj) {
-// 	if (obj === null || typeof(obj) !== "object" || obj.nodeType || (obj === obj.window)) {
-// 		return false;
-// 	}
-// 	if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
-// 		return false;
-// 	}
-// 	return true;
-// }
 
 exports.isArray = function(obj){
 	return Object.prototype.toString.call(obj) == "[object Array]"
@@ -796,10 +798,6 @@ exports.isFunction = function(obj){
 exports.isObject = function(obj){
 	return typeof obj === "object" && obj !== null
 }
-
-// exports.isEmpty = function(obj){
-// 	return typeof obj == 'undefined' || obj === null;
-// }
 
 exports.arg2arr = function(arg,b,s){
 	return Array.prototype.slice.call(arg,b,s);

@@ -23,10 +23,10 @@ queue1.push(function(){return 2;}) //插入普通方法会按Promises/A+规则�
 queue1.unshift(testfun,[0]) //插入优先执行项 (后进先出)
 .then(console.log);
 
-queue1.addLikeArray([3,4],testfun,{'event_item_resolve':log}) //插入多个运行项 array,完成一项,将执行一次log方法
+queue1.addLikeArray([3,4],testfun,{'workResolve':log}) //插入多个运行项 array,完成一项,将执行一次log方法
 .then(console.log) 
 
-queue1.addLikeProps({'a':5,'b':6,'c':7},testfun,{'event_item_resolve':log}) //插入多个运行项 map , 最后的promise值也是一个对应map
+queue1.addLikeProps({'a':5,'b':6,'c':7},testfun,{'workResolve':log}) //插入多个运行项 map , 最后的promise值也是一个对应map
 .then(console.log)
 
 var v = 0;
@@ -35,7 +35,7 @@ queue1.push(function(){
     return testfun(v);
 },{
     retry:10 //设置重试次数
-    ,retry_type:true //重试模式为优先
+    ,retryIsJump:true //重试模式为优先
 }).then(console.log)
 
 //queue1.start(); //执行队列

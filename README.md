@@ -14,7 +14,7 @@ var q = Queue.Promise; //a Promise utils;
 //Realize a queue with a maximum concurrency of 1
 var queue1 = new Queue(1,{
         "retry":0               //Number of retries
-        ,"retry_type":false     //retry now? 
+        ,"retryIsJump":false     //retry now? 
         ,"timeout":0            //The timeout period
     });
 
@@ -37,10 +37,10 @@ queue1.push(function(){return 2;}) //The normal function returns a promise accor
 queue1.unshift(testfn,[0]) //add job (LIFO)
 .then(console.log);
 
-queue1.addLikeArray([3,4],testfn,{'event_item_resolve':log}) //Add multiple jobs with Array, Work done will execute 'event_item_resolve'
+queue1.addLikeArray([3,4],testfn,{'workResolve':log}) //Add multiple jobs with Array, Work done will execute 'workResolve'
 .then(console.log) 
 
-queue1.addLikeProps({'a':5,'b':6,'c':7},testfn,{'event_item_resolve':log}) //Add multiple jobs with Map,
+queue1.addLikeProps({'a':5,'b':6,'c':7},testfn,{'workResolve':log}) //Add multiple jobs with Map,
 .then(console.log)
 
 //queue1.start(); //queue start;
@@ -78,14 +78,14 @@ about options like:
 ```js
 var Queue = require("promise-queue-plus");
 var queue = new Queue(10,{
-        "event_queue_begin":function(queue){}         
-        ,"event_queue_end":function(queue){}          
-        ,"event_queue_add":function(item,queue){}     
-        ,"event_item_resolve":function(value,queue){} 
-        ,"event_item_reject":function(reason,queue){} 
-        ,"event_item_finally":function(queue){}       
+        "queueStart":function(queue){}         
+        ,"queueEnd":function(queue){}          
+        ,"workAdd":function(item,queue){}     
+        ,"workResolve":function(value,queue){} 
+        ,"workReject":function(reason,queue){} 
+        ,"workFinally":function(queue){}       
         ,"retry":3                                    
-        ,"retry_type":true                           
+        ,"retryIsJump":true                           
         ,"timeout":2000                                  
     })
 ```
@@ -120,11 +120,11 @@ add job (FIFO)
 about options like:
 ```js
 queue.push(function(a,b){return a+b;},[1,2],{
-    "event_item_resolve":false                    //1. Queue events are not executed
-    ,"event_item_reject":function(reason,queue){} //2. Are executed
-    ,"event_item_finally":function(queue){return false;} //3. if return false,Queue events are not executed
+    "workResolve":false                    //1. Queue events are not executed
+    ,"workReject":function(reason,queue){} //2. Are executed
+    ,"workFinally":function(queue){return false;} //3. if return false,Queue events are not executed
     ,"retry":0                                 //Override the queue settings
-    ,"retry_type":false                        //Override the queue settings
+    ,"retryIsJump":false                        //Override the queue settings
     ,"timeout":0                               //Override the queue settings
 });
 ```

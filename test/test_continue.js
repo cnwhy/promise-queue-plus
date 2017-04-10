@@ -33,7 +33,7 @@ function adde(){
 		+function(){
 			var k = n++;
 			queue.go(testfun(),[k],{
-				'event_item_finally':function(){
+				'workFinally':function(){
 					data++;
 					(data%20000 == 0) && console.log('第' + data + '个事件完成 - 运行中事件数：' + this.getRunCount() + ' - 剩余：' + this.getLength());
 					setTimeout((function(){

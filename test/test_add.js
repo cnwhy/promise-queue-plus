@@ -58,7 +58,7 @@ function test(P,name){
 	}
 	var d1 = new Date();
 	console.log("添加 " + maxl + " 元素耗时  ---- " + (d1 - d0))
-	queue.option("event_queue_end",function(){
+	queue.option("queueEnd",function(){
 		var d2 = new Date();
 		console.log("" + bxs + " 并行完成队列耗时  ---- " + (d2 - d1))
 		console.log('<<<<<<<<<<<<<<')

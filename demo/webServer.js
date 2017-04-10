@@ -6,8 +6,8 @@ var app = express();
 var port = 8800;
 
 var queue = new Queue(1,{
-	'event_queue_add' : setBusy
-	,'event_item_finally': setBusy
+	'workAdd' : setBusy
+	,'workFinally': setBusy
 })
 
 var isBusy = false
