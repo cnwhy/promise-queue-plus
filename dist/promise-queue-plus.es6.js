@@ -314,7 +314,7 @@ exports.arg2arr = function(arg,b,s){
 var epc = require("extend-promise/src/extendClass");
 var utils = require("./utils");
 
-function use(Promise){	
+function use(Promise){
 	var _Promise;
 	setPromise(Promise);
 	var ONERROR = function(err){
@@ -343,6 +343,7 @@ function use(Promise){
 			return _Promise.reject(e);
 		}
 	}
+	
 	/**
 	 * 队列类
 	 * @param {Number} max 队列最大并行数
@@ -350,28 +351,28 @@ function use(Promise){
 	 */
 	function Queue(max,options) {
 		var self = this;
-		var def = {
-			"event_queue_begin":null    //队列开始
-			,"event_queue_end":null     //队列完成
-			,"event_queue_add":null     //有执行项添加进执行单元后执行
-			,"event_item_resolve":null  //成功
-			,"event_item_reject":null   //失败
-			,"event_item_finally":null  //一个执行单元结束后
-			,"retry":0                  //执行单元出错重试次数
-			,"retry_type":0             //重试模式 0/false:搁置执行(插入队列尾部重试),1/true:优先执行 (插入队列头部重试)
-			,"timeout":0                //执行单元超时时间(毫秒)
-		}
+		// var def = {
+		// 	"event_queue_begin":null    //队列开始
+		// 	,"event_queue_end":null     //队列完成
+		// 	,"event_queue_add":null     //有执行项添加进执行单元后执行
+		// 	,"event_item_resolve":null  //成功
+		// 	,"event_item_reject":null   //失败
+		// 	,"event_item_finally":null  //一个执行单元结束后
+		// 	,"retry":0                  //执行单元出错重试次数
+		// 	,"retry_type":0             //重试模式 0/false:搁置执行(插入队列尾部重试),1/true:优先执行 (插入队列头部重试)
+		// 	,"timeout":0                //执行单元超时时间(毫秒)
+		// }
 
 		var def = {
-			"queueStart":null    //队列开始
-			,"queueEnd":null     //队列完成
-			,"workAdd":null     //有执行项添加进执行单元后执行
-			,"workResolve":null  //成功
-			,"workReject":null   //失败
-			,"workFinally":null  //一个执行单元结束后
-			,"retry":0                  //执行单元出错重试次数
-			,"retryIsJump":false        //重试模式 false:搁置执行(插入队列尾部重试),true:优先执行 (插入队列头部重试)
-			,"timeout":0                //执行单元超时时间(毫秒)
+			"queueStart"  : null    //队列开始
+			,"queueEnd"   : null     //队列完成
+			,"workAdd"    : null     //有执行项添加进执行单元后执行
+			,"workResolve": null  //成功
+			,"workReject" : null   //失败
+			,"workFinally": null  //一个执行单元结束后
+			,"retry"      : 0                  //执行单元出错重试次数
+			,"retryIsJump": false        //重试模式 false:搁置执行(插入队列尾部重试),true:优先执行 (插入队列头部重试)
+			,"timeout"    : 0                //执行单元超时时间(毫秒)
 		}
 
 		var _queue = [];
@@ -783,6 +784,7 @@ function use(Promise){
 	Queue.createUse = use;
 	return Queue;
 };
+
 module.exports = use;
 },{"./utils":5,"extend-promise/src/extendClass":2}],5:[function(require,module,exports){
 'use strict';
