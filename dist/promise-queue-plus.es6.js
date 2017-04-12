@@ -1,5 +1,5 @@
 /*!
- * promise-queue-plus v1.0.0
+ * promise-queue-plus v1.0.1
  * Homepage https://github.com/cnwhy/promise-queue-plus
  * License BSD-2-Clause
  */
