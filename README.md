@@ -19,7 +19,7 @@ var queue1 = new Queue(1,{
     });
 
 //a return promise function
-function testfun(i){
+function testfn(i){
     return new Promise(function(resolve,reject){
         setTimeout(function(){
             resolve(i)
@@ -29,22 +29,22 @@ function testfun(i){
 var log = function(msg){ console.log(msg); }
 
 queue1.push(testfn,[1]) //add job (FIFO)
-.then(console.log); 
+.then(log); 
 
 queue1.push(function(){return 2;}) //The normal function returns a promise according to the Promise / A + rule
-.then(console.log);
+.then(log);
 
 queue1.unshift(testfn,[0]) //add job (LIFO)
-.then(console.log);
+.then(log);
 
 queue1.addLikeArray([3,4],testfn,{'workResolve':log}) //Add multiple jobs with Array, Work done will execute 'workResolve'
-.then(console.log) 
+.then(log) 
 
 queue1.addLikeProps({'a':5,'b':6,'c':7},testfn,{'workResolve':log}) //Add multiple jobs with Map,
-.then(console.log)
+.then(log)
 
 //queue1.start(); //queue start;
-queue1.go(testfn,['go']).then(console.log) 
+queue1.go(testfn,['go']).then(log) 
 /*
  Equivalent to:
     queue1.push(testfn,['go']).then(console.log);
@@ -138,6 +138,19 @@ like `push` and start queue
 
 ### queue.jump(promisefun, *args[]*, *options*)  
 like `unshift` and start queue  
+
+### queue.add(executor, *options*, *start*, *jump*)  
+- `executor` like the `new Promise(executor)`
+- `options` like 'options' for `push` 
+- `start` Whether to start immediately
+- `jump`  Whether the LIFO mode
+
+```js
+queue.add(function(resolve, reject){
+    resolve(1);
+},true).then(console.log,console.error)
+//output 1;
+```
 
 ### queue.addArray(arr,*start*,*jump*)  
 Add multiple jobs with Array, promise value as Array;

@@ -107,7 +107,7 @@ function use(Promise){
 		 * @param {queueUnit} unit 执行单元对像
 		 * @param {bool} stack  是否以栈模式(后进先出)插入
 		 * @param {bool} start  是否启动队列
-		 * @param {bool} noAdd  是否调用队列workAdd方法(重试模式需要)
+		 * @param {bool} noAdd  是否调用队列workAdd方法 (重试模式不调用需要)
 		 */
 		this._addItem = function(unit,stack,start,noAdd){
 			if(!(unit instanceof QueueUnit)) throw new TypeError('"unit" is not QueueUnit')
@@ -421,7 +421,25 @@ function use(Promise){
 			o._addItem(unit,true,true);
 			return unit.defer.promise;
 		}
-
+		,add: function(fn,options){//fn,*options*,*start*,*jump*
+			var o = this, _fun, _i = 1, unitArgs, start, jump, promise;
+			if(!utils.isFunction(fn)) throw new TypeError("Queues only support function, '" + fn + "' is not function")
+			_fun = function(){
+				var defer = _Promise.defer();
+				fn(defer.resolve,defer.reject);
+				return defer.promise
+			}
+			unitArgs = [_fun]
+			if(utils.isObject(options)){
+				unitArgs.push(options);
+				_i++;
+			}
+			start = !!arguments[_i]
+			jump = !!arguments[_i+1];
+			promise = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
+			if(start) o.start();
+			return promise;
+		}
 		,addArray: function(array,start,jump){
 			var parrs = [];
 			var o = this;
@@ -435,7 +453,7 @@ function use(Promise){
 			}
 			var nextP = _Promise.defer();
 			_Promise.all(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
-			if(start) this.start();
+			if(start) o.start();
 			return nextP.promise;
 		}
 		,addProps: function(props,start,jump){
@@ -451,7 +469,7 @@ function use(Promise){
 			}
 			var nextP = _Promise.defer();
 			_Promise.allMap(parrs).then(function(data){nextP.resolve(data)},function(err){nextP.reject(err)})
-			if(start) this.start();
+			if(start) o.start();
 			return nextP.promise;
 		}
 		,addLikeArray: function(array,fn,con){

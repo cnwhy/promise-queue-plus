@@ -1,11 +1,15 @@
 var Queue = require('../');
-var q = Queue.Q;  //配合使用的Promise流程控制类，也可以使用原生Promise也可以用q.js,等实现Prmise的类库
+var q = Queue.Promise; //a Promise utils;
 
-//实列化一个最大并发为1的队列
-var queue1 = new Queue(1); 
+//Realize a queue with a maximum concurrency of 1
+var queue1 = new Queue(1,{
+        "retry":0               //Number of retries
+        ,"retryIsJump":false     //retry now? 
+        ,"timeout":0            //The timeout period
+    });
 
-//定义一个Promise风格的异步方法
-function testfun(i){
+//a return promise function
+function testfn(i){
     return new Promise(function(resolve,reject){
         setTimeout(function(){
             resolve(i)
@@ -14,34 +18,25 @@ function testfun(i){
 }
 var log = function(msg){ console.log(msg); }
 
-queue1.push(testfun,[1]) //向队列添加运行单元
-.then(console.log); 
+queue1.push(testfn,[1]) //add job (FIFO)
+.then(log); 
 
-queue1.push(function(){return 2;}) //插入普通方法会按Promises/A+规则反回promise
-.then(console.log);
+queue1.push(function(){return 2;}) //The normal function returns a promise according to the Promise / A + rule
+.then(log);
 
-queue1.unshift(testfun,[0]) //插入优先执行项 (后进先出)
-.then(console.log);
+queue1.unshift(testfn,[0]) //add job (LIFO)
+.then(log);
 
-queue1.addLikeArray([3,4],testfun,{'workResolve':log}) //插入多个运行项 array,完成一项,将执行一次log方法
-.then(console.log) 
+queue1.addLikeArray([3,4],testfn,{'workResolve':log}) //Add multiple jobs with Array, Work done will execute 'workResolve'
+.then(log) 
 
-queue1.addLikeProps({'a':5,'b':6,'c':7},testfun,{'workResolve':log}) //插入多个运行项 map , 最后的promise值也是一个对应map
-.then(console.log)
+queue1.addLikeProps({'a':5,'b':6,'c':7},testfn,{'workResolve':log}) //Add multiple jobs with Map,
+.then(log)
 
-var v = 0;
-queue1.push(function(){
-    if(++v<8) throw "err";
-    return testfun(v);
-},{
-    retry:10 //设置重试次数
-    ,retryIsJump:true //重试模式为优先
-}).then(console.log)
+queue1.add(function(resolve,reject){
+    resolve(8)
+}).then(log) 
 
-//queue1.start(); //执行队列
-queue1.go(testfun,['go']).then(console.log) 
-
-
-
+queue1.go(testfn,['go']).then(log) 
 
 

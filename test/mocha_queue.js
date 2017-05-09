@@ -170,6 +170,15 @@ var addnoFun = function(queue,type){
 			}
 		})
 	}
+	if(!type ||  ~ts.indexOf('add')){
+		noFuns.forEach(function(v,i){
+			try{
+				queue.add(v);
+			}catch(e){
+				errs.push(e)
+			}
+		})
+	}
 	return errs;
 }
 
@@ -280,7 +289,7 @@ describe('测试Queue', function(){
 			var q1 = new Queue(1)
 			it('插入非函数报错', function(done){
 				var errs = addnoFun(q1);
-				if(errs.length != 40){
+				if(errs.length != 50){
 					return done("错误数目不对");
 				}
 				for(var i=0; i < errs.length; i++){
@@ -360,6 +369,45 @@ describe('测试Queue', function(){
 					if(err !== 2) done("返回参数错误");
 				})
 				q1.jump(function(){return 1;}).then(succ(1,done),err(done));
+			})
+			it('.add resolve value', function(done){
+				q1.add(function(resolve,reject){
+					resolve(1)
+				},true).then(succ(1,done),err(done));
+			})
+			it('.add resolve value 异步', function(done){
+				q1.add(function(resolve,reject){
+					setTimeout(function(){
+						resolve(1)
+					},0)
+				},true).then(succ(1,done),err(done));
+			})
+			it('.add resolve promise succ', function(done){
+				q1.add(function(resolve,reject){
+					resolve(fun2(1))
+				},true).then(succ(1,done),err(done));
+			})
+			it('.add resolve promise err', function(done){
+				q1.add(function(resolve,reject){
+					resolve(fun2(1,2))
+				},true).then(err(done),succ(2,done));
+			})
+			it('.add throw', function(done){
+				q1.add(function(resolve,reject){
+					throw 2;
+				},true).then(err(done),succ(2,done))
+			})
+			it('.add reject', function(done){
+				q1.add(function(resolve,reject){
+					reject(2);
+				},true).then(err(done),succ(2,done))
+			})
+			it('.add reject 异步', function(done){
+				q1.add(function(resolve,reject){
+					setTimeout(function(){
+						reject(2);
+					},0)
+				},true).then(err(done),succ(2,done))
 			})
 		})
 
