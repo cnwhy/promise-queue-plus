@@ -39,28 +39,17 @@ function use(Promise){
 	 */
 	function Queue(max,options) {
 		var self = this;
-		// var def = {
-		// 	"event_queue_begin":null    //队列开始
-		// 	,"event_queue_end":null     //队列完成
-		// 	,"event_queue_add":null     //有执行项添加进执行单元后执行
-		// 	,"event_item_resolve":null  //成功
-		// 	,"event_item_reject":null   //失败
-		// 	,"event_item_finally":null  //一个执行单元结束后
-		// 	,"retry":0                  //执行单元出错重试次数
-		// 	,"retry_type":0             //重试模式 0/false:搁置执行(插入队列尾部重试),1/true:优先执行 (插入队列头部重试)
-		// 	,"timeout":0                //执行单元超时时间(毫秒)
-		// }
 
 		var def = {
-			"queueStart"  : null    //队列开始
+			"queueStart"  : null     //队列开始
 			,"queueEnd"   : null     //队列完成
 			,"workAdd"    : null     //有执行项添加进执行单元后执行
-			,"workResolve": null  //成功
-			,"workReject" : null   //失败
-			,"workFinally": null  //一个执行单元结束后
-			,"retry"      : 0                  //执行单元出错重试次数
-			,"retryIsJump": false        //重试模式 false:搁置执行(插入队列尾部重试),true:优先执行 (插入队列头部重试)
-			,"timeout"    : 0                //执行单元超时时间(毫秒)
+			,"workResolve": null     //成功
+			,"workReject" : null     //失败
+			,"workFinally": null     //一个执行单元结束后
+			,"retry"      : 0        //执行单元出错重试次数
+			,"retryIsJump": false    //重试模式 false:搁置执行(插入队列尾部重试),true:优先执行 (插入队列头部重试)
+			,"timeout"    : 0        //执行单元超时时间(毫秒)
 		}
 
 		var _queue = [];
@@ -235,9 +224,9 @@ function use(Promise){
 	}
 
 	/**
-	 * 队列执行单类
+	 * 队列执行单元类
 	 * @param {Function} fn  运行函数
-	 * @param {Array}    args 元行函数的参数,可省略
+	 * @param {Array}    args 运行函数的参数,可省略
 	 * @param {Object}   options 其他配置
 	 */
 	function QueueUnit(fn, args, options){
@@ -345,7 +334,7 @@ function use(Promise){
 		var isArray = utils.isArray(data);
 		var rdata  = isArray ? [] : {};
 		function fill(k){
-			var args = each ? [].concat([data[k]],[k],[data]) : [].concat(data[k]);
+			var args = each ? utils.toArray([data[k]],[k],[data]) : utils.toArray(data[k]);
 			rdata[k] = [fn,args,con];
 		}
 		if(isArray){
@@ -446,7 +435,7 @@ function use(Promise){
 			for(var i = 0;i<array.length;i++){
 				+function(){
 					var _i = i;
-					var unitArgs = array[_i];
+					var unitArgs = utils.toArray(array[_i]);
 					var _p = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
 					parrs.push(_p);
 				}()
@@ -462,7 +451,7 @@ function use(Promise){
 			for(var k in props){
 				+function(){
 					var _k = k;
-					var unitArgs = props[_k];
+					var unitArgs = utils.toArray(props[_k]);
 					var _p = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
 					parrs[_k] = _p;
 				}()

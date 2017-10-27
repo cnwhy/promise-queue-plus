@@ -15,3 +15,7 @@ exports.isObject = function(obj){
 exports.arg2arr = function(arg,b,s){
 	return Array.prototype.slice.call(arg,b,s);
 }
+
+exports.toArray = function(){
+	return Array.prototype.concat.apply([],arguments);
+}
