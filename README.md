@@ -95,7 +95,9 @@ a Promise utils, See also [extend-promise#类扩展](https://github.com/cnwhy/ex
 Note: The prototype is not expanded with [extend-promise][github-extend-promise];
 
 ### Queue.use(Promise) , Queue.createUse(Promise)
-Modify the internal use of Promise , the default use of [bluebird][github-bluebird]    
+Modify the internal use of Promise , the default use of `es6 Promise`
+> v2.x 之后 默认使用原生Promise以适用最新的'Async/Await'语法;
+> 如果想和 v1.x 保持一至,请这样引用 `var Queue = require('promise-queue-plus/bluebird');` default use of [bluebird][github-bluebird]
 - `Queue.use(Promise)` use `Promise`;  
 - `Queue.createUse(Promise)` return new Class use `Promise`;  
 
