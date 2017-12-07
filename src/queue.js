@@ -1,36 +1,29 @@
-"use strict";
-var epc = require("extend-promise/src/extendClass");
 var utils = require("./utils");
 
 function use(Promise){
 	var _Promise;
 	setPromise(Promise);
+
 	var ONERROR = function(err){
-		try{
-			console.error(err);
-		}catch(e){}
+		console.error(err);
 	};
 
+	/**
+	 * 运行函数，使其始终返回promise对像
+	 * @param {function} fn 
+	 * @return {Promise}
+	 */
+	var runFn = function(fn){
+		return utils.runFn2Promise(_Promise,fn);
+	}
+
+	/**
+	 * 设置内部使用的Promise
+	 * @param {Promise} Promise 
+	 */
 	function setPromise(Promise){
-		_Promise = Queue.Q = Queue.Promise = epc(Promise,{});
+		_Promise = Queue.Q = Queue.Promise = utils.extendPromise(Promise);
 	};
-
-	function maxFormat(max){
-		var _max = (+max)>>0;
-		if(_max > 0){
-			return _max;
-		}else{
-			throw new Error('The "max" value is invalid')
-		}
-	}
-
-	function toPromise(fn){
-		try{
-			return _Promise.resolve(fn());
-		}catch(e){
-			return _Promise.reject(e);
-		}
-	}
 	
 	/**
 	 * 队列类
@@ -53,7 +46,7 @@ function use(Promise){
 		}
 
 		var _queue = [];
-		var _max = maxFormat(max);
+		var _max = utils.getPositiveInt(max);
 		var _runCount = 0;
 		var _isStart = false;
 		var _isStop = 0;
@@ -72,7 +65,7 @@ function use(Promise){
 		}
 		this.setMax = function(max){
 			try{
-				_max = maxFormat(max);
+				_max = utils.getPositiveInt(max);
 				if(!_isStop && _runCount) self.start();
 			}catch(e){
 				onError.call(self,e)
@@ -170,7 +163,7 @@ function use(Promise){
 						runEvent.call(self,'queueStart',self,self);
 					}
 
-					var nextp = toPromise(function(){
+					var nextp = runFn(function(){
 						return unit.fn.apply((_self || null),unit.regs)
 					}).then(issucc,iserr).then(function(){
 						if(_queue.length>0){

@@ -43,6 +43,10 @@ queue1.addLikeArray([3,4],testfn,{'workResolve':log}) //Add multiple jobs with A
 queue1.addLikeProps({'a':5,'b':6,'c':7},testfn,{'workResolve':log}) //Add multiple jobs with Map,
 .then(log)
 
+queue1.add(function(resolve,reject){
+    resolve(8);
+}).then(log)
+
 //queue1.start(); //queue start;
 queue1.go(testfn,['go']).then(log) 
 /*
@@ -64,6 +68,7 @@ queue1.go(testfn,['go']).then(log)
 6
 7
 { a: 5, b: 6, c: 7 }
+8
 go
 */
 ```

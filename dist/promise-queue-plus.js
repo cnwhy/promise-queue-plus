@@ -503,39 +503,32 @@ exports.arg2arr = function(arg,b,s){
 	return Array.prototype.slice.call(arg,b,s);
 }
 },{}],6:[function(require,module,exports){
-"use strict";
-var epc = require("extend-promise/src/extendClass");
 var utils = require("./utils");
 
 function use(Promise){
 	var _Promise;
 	setPromise(Promise);
+
 	var ONERROR = function(err){
-		try{
-			console.error(err);
-		}catch(e){}
+		console.error(err);
 	};
 
+	/**
+	 * 运行函数，使其始终返回promise对像
+	 * @param {function} fn 
+	 * @return {Promise}
+	 */
+	var runFn = function(fn){
+		return utils.runFn2Promise(_Promise,fn);
+	}
+
+	/**
+	 * 设置内部使用的Promise
+	 * @param {Promise} Promise 
+	 */
 	function setPromise(Promise){
-		_Promise = Queue.Q = Queue.Promise = epc(Promise,{});
+		_Promise = Queue.Q = Queue.Promise = utils.extendPromise(Promise);
 	};
-
-	function maxFormat(max){
-		var _max = (+max)>>0;
-		if(_max > 0){
-			return _max;
-		}else{
-			throw new Error('The "max" value is invalid')
-		}
-	}
-
-	function toPromise(fn){
-		try{
-			return _Promise.resolve(fn());
-		}catch(e){
-			return _Promise.reject(e);
-		}
-	}
 	
 	/**
 	 * 队列类
@@ -544,32 +537,21 @@ function use(Promise){
 	 */
 	function Queue(max,options) {
 		var self = this;
-		// var def = {
-		// 	"event_queue_begin":null    //队列开始
-		// 	,"event_queue_end":null     //队列完成
-		// 	,"event_queue_add":null     //有执行项添加进执行单元后执行
-		// 	,"event_item_resolve":null  //成功
-		// 	,"event_item_reject":null   //失败
-		// 	,"event_item_finally":null  //一个执行单元结束后
-		// 	,"retry":0                  //执行单元出错重试次数
-		// 	,"retry_type":0             //重试模式 0/false:搁置执行(插入队列尾部重试),1/true:优先执行 (插入队列头部重试)
-		// 	,"timeout":0                //执行单元超时时间(毫秒)
-		// }
 
 		var def = {
-			"queueStart"  : null    //队列开始
+			"queueStart"  : null     //队列开始
 			,"queueEnd"   : null     //队列完成
 			,"workAdd"    : null     //有执行项添加进执行单元后执行
-			,"workResolve": null  //成功
-			,"workReject" : null   //失败
-			,"workFinally": null  //一个执行单元结束后
-			,"retry"      : 0                  //执行单元出错重试次数
-			,"retryIsJump": false        //重试模式 false:搁置执行(插入队列尾部重试),true:优先执行 (插入队列头部重试)
-			,"timeout"    : 0                //执行单元超时时间(毫秒)
+			,"workResolve": null     //成功
+			,"workReject" : null     //失败
+			,"workFinally": null     //一个执行单元结束后
+			,"retry"      : 0        //执行单元出错重试次数
+			,"retryIsJump": false    //重试模式 false:搁置执行(插入队列尾部重试),true:优先执行 (插入队列头部重试)
+			,"timeout"    : 0        //执行单元超时时间(毫秒)
 		}
 
 		var _queue = [];
-		var _max = maxFormat(max);
+		var _max = utils.getPositiveInt(max);
 		var _runCount = 0;
 		var _isStart = false;
 		var _isStop = 0;
@@ -588,7 +570,7 @@ function use(Promise){
 		}
 		this.setMax = function(max){
 			try{
-				_max = maxFormat(max);
+				_max = utils.getPositiveInt(max);
 				if(!_isStop && _runCount) self.start();
 			}catch(e){
 				onError.call(self,e)
@@ -686,7 +668,7 @@ function use(Promise){
 						runEvent.call(self,'queueStart',self,self);
 					}
 
-					var nextp = toPromise(function(){
+					var nextp = runFn(function(){
 						return unit.fn.apply((_self || null),unit.regs)
 					}).then(issucc,iserr).then(function(){
 						if(_queue.length>0){
@@ -740,9 +722,9 @@ function use(Promise){
 	}
 
 	/**
-	 * 队列执行单类
+	 * 队列执行单元类
 	 * @param {Function} fn  运行函数
-	 * @param {Array}    args 元行函数的参数,可省略
+	 * @param {Array}    args 运行函数的参数,可省略
 	 * @param {Object}   options 其他配置
 	 */
 	function QueueUnit(fn, args, options){
@@ -850,7 +832,7 @@ function use(Promise){
 		var isArray = utils.isArray(data);
 		var rdata  = isArray ? [] : {};
 		function fill(k){
-			var args = each ? [].concat([data[k]],[k],[data]) : [].concat(data[k]);
+			var args = each ? utils.toArray([data[k]],[k],[data]) : utils.toArray(data[k]);
 			rdata[k] = [fn,args,con];
 		}
 		if(isArray){
@@ -951,7 +933,7 @@ function use(Promise){
 			for(var i = 0;i<array.length;i++){
 				+function(){
 					var _i = i;
-					var unitArgs = array[_i];
+					var unitArgs = utils.toArray(array[_i]);
 					var _p = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
 					parrs.push(_p);
 				}()
@@ -967,7 +949,7 @@ function use(Promise){
 			for(var k in props){
 				+function(){
 					var _k = k;
-					var unitArgs = props[_k];
+					var unitArgs = utils.toArray(props[_k]);
 					var _p = jump ? o.unshift.apply(o,unitArgs) : o.push.apply(o,unitArgs);
 					parrs[_k] = _p;
 				}()
@@ -997,22 +979,54 @@ function use(Promise){
 };
 
 module.exports = use;
-},{"./utils":7,"extend-promise/src/extendClass":4}],7:[function(require,module,exports){
-'use strict';
+},{"./utils":7}],7:[function(require,module,exports){
+var epc = require("extend-promise/src/extendClass");
 
-exports.isArray = function(obj){
-	return Object.prototype.toString.call(obj) == "[object Array]"
+exports.isArray = function (obj) {
+	return Object.prototype.toString.call(obj) == "[object Array]";
 }
 
-exports.isFunction = function(obj){
-	return typeof obj === "function"
+exports.isFunction = function (obj) {
+	return typeof obj === "function";
 }
 
-exports.isObject = function(obj){
+exports.isObject = function (obj) {
 	return typeof obj === "object" && obj !== null
 }
 
-exports.arg2arr = function(arg,b,s){
-	return Array.prototype.slice.call(arg,b,s);
+exports.arg2arr = function (arg, b, s) {
+	return Array.prototype.slice.call(arg, b, s);
 }
-},{}]},{},[1])
+
+exports.toArray = function () {
+	return Array.prototype.concat.apply([], arguments);
+}
+
+/**
+ * 将值修整为正整数，0与负数报错
+ * @param {Number} max 
+ */
+exports.getPositiveInt = function (max) {
+	var _max = (+max) >> 0;
+	if (_max >= 1) {
+		return _max;
+	} else {
+		throw new Error('The "max" value is invalid')
+	}
+}
+/**
+ * 扩展Promise
+ * @param {Promise} Promise 
+ */
+exports.extendPromise = function (Promise) {
+	return epc(Promise, {});
+}
+
+exports.runFn2Promise = function (Promise,fn) {
+	try{
+		return Promise.resolve(fn());
+	}catch(e){
+		return Promise.reject(e);
+	}
+}
+},{"extend-promise/src/extendClass":4}]},{},[1])
