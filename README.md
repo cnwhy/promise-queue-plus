@@ -91,7 +91,8 @@ var queue = new Queue(10,{
         ,"workFinally":function(queue){}       
         ,"retry":3                                    
         ,"retryIsJump":true                           
-        ,"timeout":2000                                  
+        ,"timeout":2000            
+        ,"autoRun":true               
     })
 ```
 

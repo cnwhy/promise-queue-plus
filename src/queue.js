@@ -31,8 +31,10 @@ function use(Promise){
 	 * @param {Number} options 队列其他配置
 	 */
 	function Queue(max,options) {
+		if (!(this instanceof Queue)) {
+			return new Queue(max,options);
+		}
 		var self = this;
-
 		var def = {
 			"queueStart"  : null     //队列开始
 			,"queueEnd"   : null     //队列完成
@@ -43,13 +45,14 @@ function use(Promise){
 			,"retry"      : 0        //执行单元出错重试次数
 			,"retryIsJump": false    //重试模式 false:搁置执行(插入队列尾部重试),true:优先执行 (插入队列头部重试)
 			,"timeout"    : 0        //执行单元超时时间(毫秒)
+			,"autoRun"    : false
 		}
 
 		var _queue = [];
-		var _max = utils.getPositiveInt(max);
-		var _runCount = 0;
-		var _isStart = false;
-		var _isStop = 0;
+		var _max = utils.getPositiveInt(max);  //最大并行数
+		var _runCount = 0;                     //当前并行数
+		var _isStart = false;                  //已运行
+		var _isStop = 0;                       //是否暂停
 		this._options = def
 		this.onError = ONERROR;
 
@@ -89,7 +92,7 @@ function use(Promise){
 		 * @param {queueUnit} unit 执行单元对像
 		 * @param {bool} stack  是否以栈模式(后进先出)插入
 		 * @param {bool} start  是否启动队列
-		 * @param {bool} noAdd  是否调用队列workAdd方法 (重试模式不调用需要)
+		 * @param {bool} noAdd  是否调用队列workAdd方法 (防止重试模式 workAdd 调用多次)
 		 */
 		this._addItem = function(unit,stack,start,noAdd){
 			if(!(unit instanceof QueueUnit)) throw new TypeError('"unit" is not QueueUnit')
@@ -99,7 +102,7 @@ function use(Promise){
 				_queue.push(unit);
 			}
 			noAdd || runAddEvent.call(self,unit);
-			if(start){
+			if(start || self._options.autoRun){
 				self.start();
 			}else{
 				_isStart && queueRun();

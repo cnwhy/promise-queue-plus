@@ -1017,109 +1017,130 @@ describe('测试Queue', function () {
 
 
 		})
-		describe('#重试与超时', function () {
-			it('#重试 默认', function (done) {
-				var q1 = new Queue(2, {
-					"retry": 0,
-					"retryIsJump": 0 //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
-						,
-					'_test': 0
-				});
-				if (q1.option("retry") == 0) q1.option("retry", 5);
-				var rnumb = 0,
-					rnumb1 = 0;
-				q1.option("queueEnd", function () {
-					if (rnumb == 0 || rnumb1 == 0) return done("未重试")
-					if (rnumb !== 5 || rnumb1 !== 5) return done("重试次数错误！")
-					done();
-				})
-				q1.go(function () {
-					rnumb++;
-					if (rnumb < 5) throw "err"
-					return 1;
-				})
-				q1.go(function () {
-					rnumb1++;
-					if (rnumb1 < 5) throw "err"
-					return 1;
-				})
-			})
-			it('#重试 优先', function (done) {
-				var q1 = new Queue(1, {
-					"retry": 5,
-					"retryIsJump": 1 //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
-				})
-				var rnumb = 0,
-					rnumb1 = 0;
-				q1.go(function () {
-					var def = Q.defer()
-					setTimeout(function () {
+		describe('#重试,超时,自动运行', function () {
+			describe('#重试', function () {
+				// it('#retry new(2,{retry:5})',function(){
+
+				// })
+				it('#队列重试 默认', function (done) {
+					var q1 = new Queue(2, {
+						"retry": 0,
+						"retryIsJump": 0 //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
+							,
+						'_test': 0
+					});
+					if (q1.option("retry") == 0) q1.option("retry", 5);
+					var rnumb = 0,
+						rnumb1 = 0;
+					q1.option("queueEnd", function () {
+						if (rnumb == 0 || rnumb1 == 0) return done("未重试")
+						if (rnumb !== 5 || rnumb1 !== 5) return done("重试次数错误！")
+						done();
+					})
+					q1.go(function () {
 						rnumb++;
-						if (rnumb < 6) def.reject("err");
-						else def.resolve(1);
-					}, 20)
-					return def.promise;
+						if (rnumb < 5) throw "err"
+						return 1;
+					})
+					q1.go(function () {
+						rnumb1++;
+						if (rnumb1 < 5) throw "err"
+						return 1;
+					})
 				})
-				q1.go(function () {
-					return rnumb
-				}).then(succ(6, done), err(done))
+				it('#队列重试 重试优先', function (done) {
+					var q1 = new Queue(1, {
+						"retry": 5,
+						"retryIsJump": 1 //重试模式  0:搁置执行(插入队列尾部重试),1:优先执行 (插入队列头部重试)
+					})
+					var rnumb = 0;
+					q1.go(function () {
+						var def = Q.defer()
+						setTimeout(function () {
+							rnumb++;
+							if (rnumb < 6) def.reject("err");
+							else def.resolve(1);
+						}, 20)
+						return def.promise;
+					})
+					q1.go(function () {
+						return rnumb
+					}).then(succ(6, done), err(done))
+				})
+				it('#执行单元重试 优先队列设置', function (done) {
+					var q1 = new Queue(1, {
+						"retry": 5,
+						"retryIsJump": 1 //重试模式
+					})
+					var qobj = {
+						"retry": 3,
+						"retryIsJump": 1 //重试模式
+							,
+						"_test": 1
+					}
+					var rnumb = 0,
+						rnumb1 = 0;
+					q1.go(function () {
+						var def = Q.defer()
+						setTimeout(function () {
+							rnumb++;
+							if (rnumb < 5) def.reject(rnumb);
+							else def.resolve(1);
+						}, 20)
+						return def.promise;
+					}, qobj).then(function () {
+						done("重试出问题2");
+					}, function (err) {
+						if (err != 4) done("重试出问题1")
+					})
+					q1.go(function () {
+						return rnumb
+					}, qobj).then(succ(4, done), err(done))
+				})
 			})
-			it('#重试 优先队列设置', function (done) {
-				var q1 = new Queue(1, {
-					"retry": 5,
-					"retryIsJump": 1 //重试模式
+			describe('#超时', function () {
+				it('#超时 默认', function (done) {
+					var q1 = new Queue(2, {
+						"timeout": 100
+					})
+					q1.go(function () {
+						var def = Q.defer();
+						setTimeout(function () {
+							def.resolve("OK")
+						}, 200)
+						return def.promise;
+					}).then(err(done), succ("timeout", done))
+					//}).then(function(d){console.log("d:",d)},function(e){console.log("e:",e)})
 				})
-				var qobj = {
-					"retry": 3,
-					"retryIsJump": 0 //重试模式
-						,
-					"_test": 1
-				}
-				var rnumb = 0,
-					rnumb1 = 0;
-				q1.go(function () {
-					var def = Q.defer()
-					setTimeout(function () {
-						rnumb++;
-						if (rnumb < 5) def.reject(rnumb);
-						else def.resolve(1);
-					}, 20)
-					return def.promise;
-				}, qobj).then(function () {
-					done("重试出问题2");
-				}, function (err) {
-					if (err != 4) done("重试出问题1")
+				it('#超时 单独自定义', function (done) {
+					var q1 = new Queue(2, {
+						"timeout": 100
+					})
+					q1.go(function () {
+						var def = Q.defer();
+						setTimeout(function () {
+							def.resolve("OK")
+						}, 200)
+						return def.promise;
+					}, {
+						timeout: 300
+					}).then(succ("OK", done), err(done))
 				})
-				q1.go(function () {
-					return rnumb
-				}, qobj).then(succ(1, done), err(done))
 			})
-			it('#超时 ', function (done) {
-				var q1 = new Queue(2, {
-					"timeout": 100
+			describe('#自动运行 autoRun',function(){
+				it('#autoRun 默认false', function(done){
+					var queue = new Queue(1, {queueStart:function(){
+						done('逻辑错误');
+					}});
+					ADD(queue,'nostart')
+					setTimeout(function(){
+						done();
+					},100)
 				})
-				q1.go(function () {
-					var def = Q.defer();
-					setTimeout(function () {
-						def.resolve("OK")
-					}, 200)
-					return def.promise;
-				}).then(err(done), succ("timeout", done))
-				//}).then(function(d){console.log("d:",d)},function(e){console.log("e:",e)})
-			})
-			it('#超时 单独自定义', function (done) {
-				var q1 = new Queue(2, {
-					"timeout": 100
+				it('#autoRun true',function(done){
+					var queue = new Queue(1,{ autoRun: true})
+					queue.push(fun2,[1]).then(succ(1,done));
 				})
-				q1.go(function () {
-					var def = Q.defer();
-					setTimeout(function () {
-						def.resolve("OK")
-					}, 200)
-					return def.promise;
-				}, {
-					timeout: 300
-				}).then(succ("OK", done), err(done))
 			})
 		})
 		describe("#使用其他Promise实现", function () {
