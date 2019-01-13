@@ -44,9 +44,7 @@ gulp.task('pre-test', function () {
 });
 
 gulp.task('test', ['pre-test'], function () {
-  return gulp.src('test/mocha_*.js', {
-      read: false
-    })
+  return gulp.src('test/mocha_*.js')
     .pipe(mocha({
       reporter: 'dot'
     }))

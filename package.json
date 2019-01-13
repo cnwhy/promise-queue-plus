@@ -1,6 +1,6 @@
 {
   "name": "promise-queue-plus",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Promise-based queue. Support timeout, retry and so on.",
   "homepage": "https://github.com/cnwhy/promise-queue-plus",
   "main": "index.js",
@@ -29,19 +29,19 @@
     "队列"
   ],
   "dependencies": {
-    "bluebird": "^3",
-    "easy-promise": "^0.0.4",
-    "extend-promise": "^0.0.6"
+    "bluebird": "^3.0.0",
+    "easy-promise": "0.1.0",
+    "extend-promise": "^0.0.7"
   },
   "devDependencies": {
     "express": "^4.12.3",
     "gulp": "^3.9.1",
     "gulp-browserify": "^0.5.1",
-    "gulp-header": "^1.8.8",
+    "gulp-header": "^2.0.7",
     "gulp-istanbul": "^1.1.1",
     "gulp-mocha": "^3.0.1",
     "gulp-rename": "^1.2.2",
-    "gulp-uglify": "^2.0.0",
+    "gulp-uglify": "^3.0.1",
     "istanbul": "0.3.15",
     "mocha": "^2.5.3",
     "q": "*"

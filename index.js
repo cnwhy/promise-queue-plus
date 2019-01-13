@@ -1,1 +1,1 @@
-﻿module.exports = require("./src/queue")(require("bluebird"));
+﻿module.exports = require("./create")(require("bluebird"));
