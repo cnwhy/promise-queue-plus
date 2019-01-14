@@ -12,7 +12,7 @@ var Queue = require('promise-queue-plus');
 var q = Queue.Promise; //a Promise utils;
 
 //Realize a queue with a maximum concurrency of 1
-var queue1 = new Queue(1,{
+var queue1 = Queue(1,{
         "retry":0               //Number of retries
         ,"retryIsJump":false     //retry now? 
         ,"timeout":0            //The timeout period
@@ -82,7 +82,7 @@ Creates a queue;
 about options like:
 ```js
 var Queue = require("promise-queue-plus");
-var queue = new Queue(10,{
+var queue = Queue(10,{
         "queueStart":function(queue){}         
         ,"queueEnd":function(queue){}          
         ,"workAdd":function(item,queue){}     
@@ -111,11 +111,15 @@ Queue.Promise.defer().promise instanceof Promise; //false
 //use ES6 Promise
 Queue.use(Promise);  
 Queue.Promise.defer().promise instanceof Promise; //true
-var queue1 = new Queue(1);
+var queue1 = Queue(1);
 queue1.push(function(){}) instanceof Promise; //true;
 
 //Create a new class `NQueue`, does not affect the original` Queue`;
 var NQueue = Queue.createUse(require("q")); //use q module
+
+//use create function (v1.2+)
+var Queue = require("promise-queue-plus/create")(Promise);
+
 ```
 
   
