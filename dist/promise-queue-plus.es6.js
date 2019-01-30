@@ -1,5 +1,5 @@
 /*!
- * promise-queue-plus v1.2.1
+ * promise-queue-plus v1.2.2
  * Homepage https://github.com/cnwhy/promise-queue-plus
  * License BSD-2-Clause
  */
@@ -379,12 +379,8 @@ function use(Promise){
 			return _max;
 		}
 		this.setMax = function(max){
-			try{
-				_max = utils.getPositiveInt(max);
-				if(!_isStop && _runCount) self.start();
-			}catch(e){
-				onError.call(self,e)
-			}
+			_max = utils.getPositiveInt(max);
+			if(!_isStop && _runCount) self.start();
 		}
 		//正在排队的项数
 		this.getLength = function(){
