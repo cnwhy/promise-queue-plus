@@ -859,12 +859,13 @@ describe('测试Queue', function () {
 				}, MAXTIME * 1.5)
 			})
 			it('.setMax(-1) ', function (done) {
-				q1.onError = function (err) {
+				try{
+					q1.setMax(-1);
+				}catch(err){
 					if (err.message == 'The "max" value is invalid') {
 						done();
 					}
 				}
-				q1.setMax(-1);
 			})
 		})
 		describe('#队列事件测试', function () {
@@ -1097,6 +1098,7 @@ describe('测试Queue', function () {
 						return rnumb
 					}, qobj).then(succ(4, done), err(done))
 				})
+				it('重试延迟 sleep')
 			})
 			describe('#超时', function () {
 				it('#超时 默认', function (done) {
